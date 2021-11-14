@@ -1,33 +1,49 @@
 package bobko.todomail.model
 
-import bobko.todomail.util.IndexedPrefKey
-import bobko.todomail.util.PrefReaderContext
-import bobko.todomail.util.PrefWriterContext
+import bobko.todomail.util.*
 
 data class EmailTemplate(
     val label: String,
     val sendTo: String,
-    val credential: SmtpCredential
+    val uniqueCredential: UniqueSmtpCredential
 ) {
-    companion object {
-        private val emailTemplateLabel: IndexedPrefKey<String> by IndexedPrefKey.delegate()
-        private val emailTemplateSendTo: IndexedPrefKey<String> by IndexedPrefKey.delegate()
+    object All : SharedPref<List<EmailTemplate>>(null) {
+        private val uniqueSuffix get() = EmailTemplate::class.simpleName!!
 
-        fun read(readerContext: PrefReaderContext, index: Int): EmailTemplate? =
-            with(readerContext) {
-                EmailTemplate(
-                    emailTemplateLabel[index] ?: return null,
-                    emailTemplateSendTo[index] ?: return null,
-                    SmtpCredential.read(this, index) ?: return null
-                )
-            }
+        override fun PrefWriterDslReceiver.write(value: List<EmailTemplate>?) {
+            val idToCredential =
+                value?.associate { it.uniqueCredential.id to it.uniqueCredential } ?: emptyMap()
+            UniqueSmtpCredential.All.write(value?.map { it.uniqueCredential })
+            ListSharedPref(null, uniqueSuffix) { Pref(it, idToCredential) }.write(value)
+        }
 
-        fun write(writerContext: PrefWriterContext, index: Int, emailTemplate: EmailTemplate?) {
-            with(writerContext) {
-                emailTemplateLabel[index] = emailTemplate?.label
-                emailTemplateSendTo[index] = emailTemplate?.sendTo
-                SmtpCredential.write(this, index, emailTemplate?.credential)
-            }
+        override fun PrefReaderDslReceiver.read(): List<EmailTemplate> {
+            val idToCredential =
+                UniqueSmtpCredential.All.read().associateBy { it.id }
+            return ListSharedPref(null, uniqueSuffix) { Pref(it, idToCredential) }.read()
+        }
+    }
+
+    private class Pref(index: Int, val idToCredential: Map<Int, UniqueSmtpCredential>) :
+        SharedPref<EmailTemplate>(null) {
+        val emailTemplateLabel by stringSharedPref("", index.toString())
+        val emailTemplateSendTo by stringSharedPref("", index.toString())
+        val emailTemplateCredentialId by intSharedPref(0, index.toString())
+
+        override fun PrefWriterDslReceiver.write(value: EmailTemplate?) {
+            emailTemplateLabel.write(value?.label)
+            emailTemplateSendTo.write(value?.sendTo)
+            emailTemplateCredentialId.write(value?.uniqueCredential?.id)
+        }
+
+        override fun PrefReaderDslReceiver.read(): EmailTemplate {
+            val credentialId = emailTemplateCredentialId.read()
+            return EmailTemplate(
+                emailTemplateLabel.read(),
+                emailTemplateSendTo.read(),
+                idToCredential[credentialId]
+                    ?: error("Cannot find credential with id=$credentialId")
+            )
         }
     }
 }

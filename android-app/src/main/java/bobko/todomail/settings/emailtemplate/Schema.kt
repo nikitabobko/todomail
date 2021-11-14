@@ -173,11 +173,11 @@ class LabelTextFieldItem(private val existingLabels: Set<String>) : TextFieldIte
 
 class SmtpServerTextFieldItem() : TextFieldItem<String>(
     "SMTP Server",
-    EmailTemplate::credential.then { ::smtpServer },
+    EmailTemplate::uniqueCredential.then { ::credential }.then { ::smtpServer },
     String::class,
 ) {
     override fun onTextChanged(emailTemplate: MutableState<EmailTemplate>) {
-        val smtpServerPortLens = EmailTemplate::credential.then { ::smtpServerPort }
+        val smtpServerPortLens = EmailTemplate::uniqueCredential.then { ::credential }.then { ::smtpServerPort }
         if (smtpServerPortLens.get(emailTemplate.value) == DEFAULT_SMTP_PORT) {
             KnownSmtpCredential.findBySmtpServer(emailTemplate.value)
                 ?.smtpCredential
@@ -200,7 +200,7 @@ class SmtpServerTextFieldItem() : TextFieldItem<String>(
 
 class SmtpServerPortTextFieldItem() : TextFieldItem<Int>(
     "SMTP Server Port",
-    EmailTemplate::credential.then { ::smtpServerPort },
+    EmailTemplate::uniqueCredential.then { ::credential }.then { ::smtpServerPort },
     Int::class,
     KeyboardType.Number,
 ) {
@@ -215,7 +215,7 @@ class SmtpServerPortTextFieldItem() : TextFieldItem<Int>(
 
     private fun getKnownSmtpServerPortPair(emailTemplate: EmailTemplate): KnownSmtpCredential? =
         KnownSmtpCredential.findBySmtpServer(emailTemplate)
-            ?.takeIf { emailTemplate.credential.smtpServerPort == it.smtpCredential.smtpServerPort }
+            ?.takeIf { emailTemplate.uniqueCredential.credential.smtpServerPort == it.smtpCredential.smtpServerPort }
 
     override fun isRightSideHintVisible(emailTemplate: EmailTemplate) =
         getKnownSmtpServerPortPair(emailTemplate) != null
@@ -235,7 +235,7 @@ class SmtpServerPortTextFieldItem() : TextFieldItem<Int>(
 
 class PasswordTextFieldItem() : TextFieldItem<String>(
     "Password",
-    EmailTemplate::credential.then { ::password },
+    EmailTemplate::uniqueCredential.then { ::credential }.then { ::password },
     String::class,
     KeyboardType.Password,
 ) {
@@ -272,7 +272,7 @@ class PasswordTextFieldItem() : TextFieldItem<String>(
 
 class UsernameTextFieldItem() : TextFieldItem<String>(
     "Username",
-    EmailTemplate::credential.then { ::username },
+    EmailTemplate::uniqueCredential.then { ::credential }.then { ::username },
     String::class,
     KeyboardType.Email
 )

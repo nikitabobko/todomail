@@ -15,6 +15,7 @@ import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.SmtpCredential
+import bobko.todomail.model.UniqueSmtpCredential
 import bobko.todomail.settings.emailtemplate.suggestEmailTemplateLabel
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.CenteredRow
@@ -77,7 +78,11 @@ private fun AddAccountSettingsWizardFragment.MailItem(
     ListItem(
         modifier = Modifier.clickable {
             parentActivity().viewModel.emailTemplateToEdit = smtpCredentialTemplate?.let {
-                EmailTemplate(suggestEmailTemplateLabel(requireContext()), "", it)
+                EmailTemplate(
+                    suggestEmailTemplateLabel(requireContext()),
+                    "",
+                    UniqueSmtpCredential.new(it, requireContext())
+                )
             }
             findNavController().navigate(
                 R.id.action_addAccountSettingsWizardFragment_to_addAccountSettingsFragmentDialog

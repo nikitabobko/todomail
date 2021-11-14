@@ -17,7 +17,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
     val todoTextDraft = mutableLiveDataOf(TextFieldValue())
 
     init {
-        application.readPref { PrefManager.todoDraft.value }.takeIf { it.isNotBlank() }?.let {
+        application.readPref { PrefManager.todoDraft.read() }.takeIf { it.isNotBlank() }?.let {
             todoTextDraft.value = TextFieldValue(it)
         }
     }
@@ -73,7 +73,7 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
     override fun onCleared() {
         super.onCleared()
         getApplication<Application>().writePref {
-            PrefManager.todoDraft.value = todoTextDraft.value.text
+            PrefManager.todoDraft.write(todoTextDraft.value.text)
         }
     }
 }

@@ -31,10 +31,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.getSystemService
-import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.StartedFrom
-import bobko.todomail.model.pref.PrefManager
+import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.*
@@ -67,14 +66,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
-        val routes = PrefManager.readEmailTemplates(this@MainActivity)
-        if (routes.value.count() == 0) {
+        val templates = this.readPref {
+            EmailTemplate.All.liveData
+        }
+        if (templates.value.count() == 0) {
             finish()
             startActivity(Intent(this, SettingsActivity::class.java)) // TODO should be deeplink?
         }
         setContent {
-            MainActivityScreen(routes)
+            MainActivityScreen(templates)
         }
         window.setGravity(Gravity.BOTTOM)
         window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
         }
         val shouldPrefillWithClipboard = when (val startedFrom = viewModel.startedFrom) {
             StartedFrom.Launcher, StartedFrom.Tile -> readPref {
-                startedFrom.prefillPrefKey!!.value
+                startedFrom.prefillPrefKey!!.read()
             }
             StartedFrom.Sharesheet -> false
         }
@@ -243,7 +243,7 @@ private fun MainActivity.Buttons(
                     isError.value = false
                     showToast("Successful!")
                     val shouldCloseAfterSend =
-                        readPref { viewModel.startedFrom.closeAfterSendPrefKey.value }
+                        readPref { viewModel.startedFrom.closeAfterSendPrefKey.read() }
                     if (shouldCloseAfterSend) {
                         this@Buttons.finish()
                     }

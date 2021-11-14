@@ -20,7 +20,7 @@ class MainActivityViewModelTest {
     fun sharedTextShouldBePrioritizedOverDraftUnitTest() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.writePref {
-            PrefManager.todoDraft.value = "draft text"
+            PrefManager.todoDraft.write("draft text")
         }
         onUiThread {
             val viewModel = MainActivityViewModel(context.applicationContext as Application)
@@ -34,7 +34,7 @@ class MainActivityViewModelTest {
     fun sharedTextShouldBePrioritizedOverDraftIntegrationTest() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.writePref {
-            PrefManager.todoDraft.value = "draft value"
+            PrefManager.todoDraft.write("draft value")
         }
         val expected = "expected text"
         launchActivity<MainActivity>(

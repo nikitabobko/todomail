@@ -66,8 +66,8 @@ enum class KnownSmtpCredential(
     open fun suggestEmailSuffix(currentLabel: String) = "@$domain"
 
     companion object {
-        fun findBySmtpServer(route: EmailTemplate): KnownSmtpCredential? =
-            values().singleOrNull { it.smtpCredential.smtpServer == route.credential.smtpServer }
+        fun findBySmtpServer(template: EmailTemplate): KnownSmtpCredential? =
+            values().singleOrNull { it.smtpCredential.smtpServer == template.uniqueCredential.credential.smtpServer }
     }
 }
 

@@ -1,12 +1,12 @@
 package bobko.todomail.model
 
 import bobko.todomail.model.pref.PrefManager
-import bobko.todomail.util.PrefKey
+import bobko.todomail.util.SharedPref
 
 enum class StartedFrom(
     val text: String,
-    val prefillPrefKey: PrefKey<Boolean>?,
-    val closeAfterSendPrefKey: PrefKey<Boolean>
+    val prefillPrefKey: SharedPref<Boolean>?,
+    val closeAfterSendPrefKey: SharedPref<Boolean>
 ) {
     Launcher(
         "started from Launcher",

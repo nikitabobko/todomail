@@ -1,38 +1,31 @@
 package bobko.todomail.model
 
-import bobko.todomail.util.IndexedPrefKey
-import bobko.todomail.util.PrefReaderContext
-import bobko.todomail.util.PrefWriterContext
+import bobko.todomail.util.*
 
 data class SmtpCredential(
     val smtpServer: String,
     val smtpServerPort: Int,
     val username: String,
-    val password: String
+    val password: String,
 ) {
-    companion object {
-        private val smtpServer: IndexedPrefKey<String> by IndexedPrefKey.delegate()
-        private val smtpServerPort: IndexedPrefKey<Int> by IndexedPrefKey.delegate()
-        private val smtpUsername: IndexedPrefKey<String> by IndexedPrefKey.delegate()
-        private val smtpPassword: IndexedPrefKey<String> by IndexedPrefKey.delegate()
+    class Pref(index: Int) : SharedPref<SmtpCredential>(null) {
+        private val smtpServer by stringSharedPref("", index.toString())
+        private val smtpServerPort by intSharedPref(0, index.toString())
+        private val smtpUsername by stringSharedPref("", index.toString())
+        private val smtpPassword by stringSharedPref("", index.toString())
 
-        fun read(readContext: PrefReaderContext, index: Int): SmtpCredential? =
-            with(readContext) {
-                SmtpCredential(
-                    smtpServer[index] ?: return null,
-                    smtpServerPort[index] ?: return null,
-                    smtpUsername[index] ?: return null,
-                    smtpPassword[index] ?: return null,
-                )
-            }
-
-        fun write(writerContext: PrefWriterContext, index: Int, value: SmtpCredential?) {
-            with(writerContext) {
-                smtpServer[index] = value?.smtpServer
-                smtpServerPort[index] = value?.smtpServerPort
-                smtpUsername[index] = value?.username
-                smtpPassword[index] = value?.password
-            }
+        override fun PrefWriterDslReceiver.write(value: SmtpCredential?) {
+            smtpServer.write(value?.smtpServer)
+            smtpServerPort.write(value?.smtpServerPort)
+            smtpUsername.write(value?.username)
+            smtpPassword.write(value?.password)
         }
+
+        override fun PrefReaderDslReceiver.read() = SmtpCredential(
+            smtpServer.read(),
+            smtpServerPort.read(),
+            smtpUsername.read(),
+            smtpPassword.read(),
+        )
     }
 }

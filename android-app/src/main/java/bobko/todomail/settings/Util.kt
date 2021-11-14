@@ -113,7 +113,7 @@ fun SwitchOrCheckBoxItem(
 
 @Composable
 fun WhenTheAppIsStartedFromSection(
-    whenStartedFrom: List<Pair<StartedFrom, PrefKey<Boolean>>>
+    whenStartedFrom: List<Pair<StartedFrom, SharedPref<Boolean>>>
 ) {
     whenStartedFrom.forEach { (startedFrom, prefKey) ->
         if (startedFrom == StartedFrom.Tile && !doesSupportTiles) {
@@ -132,7 +132,7 @@ fun WhenTheAppIsStartedFromSection(
                 checked = checked,
                 onChecked = {
                     context.writePref {
-                        prefKey.value = !checked
+                        prefKey.write(!checked)
                     }
                 },
                 useCheckBox = true

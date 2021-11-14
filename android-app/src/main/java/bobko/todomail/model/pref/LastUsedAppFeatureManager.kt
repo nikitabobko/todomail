@@ -7,8 +7,8 @@ import androidx.core.content.getSystemService
 import bobko.todomail.util.*
 
 object LastUsedAppFeatureManager {
-    private val isUsageAccessPromptShowedAtLeastOnce by PrefKey.delegate(defaultValue = false)
-    private val appendAppNameThatSharedTheText by PrefKey.delegate(defaultValue = true)
+    val isUsageAccessPromptShowedAtLeastOnce by booleanSharedPref(defaultValue = false)
+    val appendAppNameThatSharedTheText by booleanSharedPref(defaultValue = true)
 
     fun getLastUsedAppLabel(context: Context): String? {
         val time = System.currentTimeMillis()

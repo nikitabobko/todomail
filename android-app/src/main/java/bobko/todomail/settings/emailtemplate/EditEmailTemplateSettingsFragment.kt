@@ -26,13 +26,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.SmtpCredential
-import bobko.todomail.model.pref.PrefManager
+import bobko.todomail.model.UniqueSmtpCredential
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.settings.SettingsScreen
-import bobko.todomail.util.CenteredRow
-import bobko.todomail.util.composeView
-import bobko.todomail.util.mutableLiveDataOf
-import bobko.todomail.util.observeAsMutableState
+import bobko.todomail.util.*
 
 const val DEFAULT_SMTP_PORT = 25
 
@@ -45,9 +42,9 @@ class EditEmailTemplateSettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = requireContext().composeView {
-        val existingRoutes = PrefManager.readEmailTemplates(requireContext()).value
+        val existingTemplates = requireContext().readPref { EmailTemplate.All.read() }
         val mode =
-            if (parentActivity().viewModel.emailTemplateToEdit in existingRoutes) Mode.Edit
+            if (parentActivity().viewModel.emailTemplateToEdit in existingTemplates) Mode.Edit
             else Mode.Add
         EditEmailTemplateSettingsFragmentScreen(mode)
     }
@@ -56,12 +53,16 @@ class EditEmailTemplateSettingsFragment : Fragment() {
 @Composable
 private fun EditEmailTemplateSettingsFragment.EditEmailTemplateSettingsFragmentScreen(mode: Mode) {
     SettingsScreen("Edit Email Template Settings") {
-        val emailTemplate = viewModel.emailTemplate.observeAsMutableState { // TODO add screen rotation test
-            parentActivity().viewModel.emailTemplateToEdit ?: EmailTemplate(
-                suggestEmailTemplateLabel(requireContext()), "",
-                SmtpCredential("", DEFAULT_SMTP_PORT, "", "")
-            )
-        }
+        val emailTemplate =
+            viewModel.emailTemplate.observeAsMutableState { // TODO add screen rotation test
+                parentActivity().viewModel.emailTemplateToEdit ?: EmailTemplate(
+                    suggestEmailTemplateLabel(requireContext()), "",
+                    UniqueSmtpCredential.new(
+                        SmtpCredential("", DEFAULT_SMTP_PORT, "", ""),
+                        requireContext()
+                    )
+                )
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
         viewModel.schema.forEach {
@@ -100,15 +101,15 @@ private fun EditEmailTemplateSettingsFragment.Buttons(
             modifier = Modifier.weight(1f),
             onClick = {
                 if (schema.filterIsInstance<TextFieldItem<*>>().any { item ->
-                        item.getCurrentText(emailTemplate.value).let { it.isBlank() || item.errorProvider(it) != null }
+                        item.getCurrentText(emailTemplate.value)
+                            .let { it.isBlank() || item.errorProvider(it) != null }
                     }
                 ) {
                     viewModel.showErrorIfFieldIsEmpty.value = true
                 } else {
-                    PrefManager.writeEmailTemplates(
-                        requireContext(),
-                        PrefManager.readEmailTemplates(requireContext()).value + listOf(emailTemplate.value)
-                    )
+                    requireContext().writePref {
+                        EmailTemplate.All.write(EmailTemplate.All.read() + emailTemplate.value)
+                    }
                     findNavController().navigateUp()
                 }
             }
@@ -129,11 +130,13 @@ private fun EditEmailTemplateSettingsFragment.Buttons(
     }
 }
 
-class EditEmailTemplateSettingsFragmentViewModel(application: Application) : AndroidViewModel(application) {
+class EditEmailTemplateSettingsFragmentViewModel(application: Application) :
+    AndroidViewModel(application) {
     val emailTemplate: MutableLiveData<EmailTemplate> = MutableLiveData()
     val showErrorIfFieldIsEmpty = mutableLiveDataOf(false)
     val schema: List<Item> = getSchema(
-        existingLabels = PrefManager.readEmailTemplates(application).value.mapTo(mutableSetOf()) { it.label }
+        existingLabels = application.readPref { EmailTemplate.All.read() }
+            .mapTo(mutableSetOf()) { it.label }
     )
 }
 
@@ -142,7 +145,8 @@ private enum class Mode {
 }
 
 fun suggestEmailTemplateLabel(context: Context): String {
-    val existingLabels = PrefManager.readEmailTemplates(context).value.mapTo(mutableSetOf()) { it.label }
+    val existingLabels =
+        context.readPref { EmailTemplate.All.read() }.mapTo(mutableSetOf()) { it.label }
     return sequenceOf("Todo", "Work")
         .plus(generateSequence(0) { it + 1 }.map { "Todo$it" })
         .first { it !in existingLabels }

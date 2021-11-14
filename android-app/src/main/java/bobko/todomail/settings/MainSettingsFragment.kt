@@ -24,13 +24,12 @@ import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
 import bobko.todomail.model.StartedFrom
 import bobko.todomail.model.EmailTemplate
-import bobko.todomail.model.pref.PrefManager
 import bobko.todomail.util.*
 
 class MainSettingsFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (PrefManager.readEmailTemplates(requireContext()).value.count() == 0) {
+        if (requireContext().readPref { EmailTemplate.All.read() }.isEmpty()) {
             findNavController().navigate(
                 R.id.action_mainSettingsFragment_to_editEmailTemplateSettingsFragment
             )
@@ -42,7 +41,7 @@ class MainSettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = requireContext().composeView {
-        MainSettingsActivityScreen(PrefManager.readEmailTemplates(requireContext()))
+        MainSettingsActivityScreen(requireContext().readPref { EmailTemplate.All.liveData })
     }
 }
 
@@ -71,9 +70,11 @@ fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveDat
             Text("Text prefill settings")
         }
 
-        OutlinedButton(onClick = { /*TODO*/ }, modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)) {
+        OutlinedButton(
+            onClick = { /*TODO*/ }, modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
             Text("Reset settings to default")
         }
     }
@@ -157,7 +158,7 @@ private fun MainSettingsFragment.TemplatesSection(
                             }
 
                             offsets = List(accounts.size) { 0 }
-                            PrefManager.writeEmailTemplates(requireContext(), newAccounts)
+                            requireContext().writePref { EmailTemplate.All.write(newAccounts) }
                         }
                     )
                 )
@@ -167,7 +168,7 @@ private fun MainSettingsFragment.TemplatesSection(
                     Text(text = emailTemplate.label)
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
-                        Text(text = "From: " + emailTemplate.credential.username)
+                        Text(text = "From: " + emailTemplate.uniqueCredential.credential.username)
                         Text(text = "To: " + emailTemplate.sendTo)
                     }
                 }
