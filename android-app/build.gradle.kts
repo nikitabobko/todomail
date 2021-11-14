@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("com.adarshr.test-logger") version "3.0.0" // https://github.com/radarsh/gradle-test-logger-plugin
@@ -22,6 +24,10 @@ testlogger {
     showFailedStandardStreams = true
 }
 
+fun File.readProperty(propertyName: String): String = bufferedReader().use { reader ->
+    Properties().apply { load(reader) }.getProperty(propertyName)
+}
+
 android {
     compileSdk = 31
 
@@ -38,10 +44,30 @@ android {
         }
     }
 
+    val secretsDir = rootDir.resolve("todomail-secrets")
+    val releaseSigningConfig = if (secretsDir.isDirectory) {
+        logger.lifecycle("Release signing is enabled")
+        signingConfigs.create("release") {
+            keyAlias = secretsDir.resolve("jks.properties").readProperty("keyAlias")
+            keyPassword = secretsDir.resolve("jks.properties").readProperty("keyPassword")
+            storeFile = secretsDir.resolve("todomail.jks")
+            storePassword = secretsDir.resolve("jks.properties").readProperty("storePassword")
+        }
+    } else {
+        logger.lifecycle("Release signing is disabled")
+        null
+    }
     buildTypes {
         release {
+            signingConfig = releaseSigningConfig
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            signingConfig = releaseSigningConfig
         }
     }
     compileOptions {
