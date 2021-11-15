@@ -35,20 +35,20 @@ fun <T : Any> mutableLiveDataOf(value: T): MutableInitializedLiveData<T> =
 fun <T : Any> AbstractInitializedLiveData<T, LiveData<T>>.observeAsState(): State<T> =
     liveData.observeAsState(value)
 
-fun <T : Any, O : Any, R : Any> AbstractInitializedLiveData<T, LiveData<T>>.then(
-    other: AbstractInitializedLiveData<O, LiveData<O>>,
+fun <T : Any, O : Any, R : Any> mergeLatestValues(
+    firstSource: AbstractInitializedLiveData<T, LiveData<T>>,
+    secondSource: AbstractInitializedLiveData<O, LiveData<O>>,
     merge: (T, O) -> R
 ): AbstractInitializedLiveData<R, LiveData<R>> {
-    val firstSource = this
     return AbstractInitializedLiveData(
         MediatorLiveData<R>().apply {
             addSource(firstSource.liveData) {
-                value = merge(it, other.value)
+                value = merge(it, secondSource.value)
             }
-            addSource(other.liveData) {
+            addSource(secondSource.liveData) {
                 value = merge(firstSource.value, it)
             }
-            value = merge(firstSource.value, other.value)
+            value = merge(firstSource.value, secondSource.value)
         }
     )
 }

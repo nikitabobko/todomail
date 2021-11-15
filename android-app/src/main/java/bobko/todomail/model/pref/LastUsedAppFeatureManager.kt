@@ -38,12 +38,12 @@ object LastUsedAppFeatureManager {
             liveDataOf(false)
         } else {
             context.readPref {
-                appendAppNameThatSharedTheText.liveData.then(
-                    isUsageAccessPromptShowedAtLeastOnce.liveData,
-                    merge = { appendAppNameThatSharedTheText, isUsageAccessPromptShowedAtLeastOnce ->
-                        appendAppNameThatSharedTheText && !isUsageAccessPromptShowedAtLeastOnce
-                    }
-                )
+                mergeLatestValues(
+                    appendAppNameThatSharedTheText.liveData,
+                    isUsageAccessPromptShowedAtLeastOnce.liveData
+                ) { appendAppNameThatSharedTheText, isUsageAccessPromptShowedAtLeastOnce ->
+                    appendAppNameThatSharedTheText && !isUsageAccessPromptShowedAtLeastOnce
+                }
             }
         }
 
