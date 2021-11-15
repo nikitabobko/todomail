@@ -1,5 +1,7 @@
 package bobko.todomail.model.pref
 
+import bobko.todomail.model.EmailTemplate
+import bobko.todomail.model.UniqueSmtpCredential
 import bobko.todomail.util.booleanSharedPref
 import bobko.todomail.util.doesSupportTiles
 import bobko.todomail.util.stringSharedPref
@@ -13,4 +15,17 @@ object PrefManager {
     val closeDialogAfterSendWhenStartedFromTile by booleanSharedPref(defaultValue = true)
 
     val todoDraft by stringSharedPref(defaultValue = "")
+
+    val all = listOf(
+        prefillWithClipboardWhenStartedFromLauncher,
+        prefillWithClipboardWhenStartedFromTile,
+        closeDialogAfterSendWhenStartedFromLauncher,
+        closeDialogAfterSendWhenStartedFromSharesheet,
+        closeDialogAfterSendWhenStartedFromTile,
+        todoDraft,
+        LastUsedAppFeatureManager.appendAppNameThatSharedTheText,
+        LastUsedAppFeatureManager.isUsageAccessPromptShowedAtLeastOnce,
+        EmailTemplate.All,
+        UniqueSmtpCredential.All
+    )
 }
