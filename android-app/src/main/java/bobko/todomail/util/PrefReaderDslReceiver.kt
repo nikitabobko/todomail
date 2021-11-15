@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.MainThread
 import androidx.preference.PreferenceManager
+import bobko.todomail.pref.SharedPref
 
 open class PrefReaderDslReceiver(val pref: SharedPreferences) {
     @MainThread

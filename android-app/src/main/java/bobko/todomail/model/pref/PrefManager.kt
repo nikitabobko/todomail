@@ -2,9 +2,9 @@ package bobko.todomail.model.pref
 
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.UniqueSmtpCredential
-import bobko.todomail.util.booleanSharedPref
+import bobko.todomail.pref.booleanSharedPref
 import bobko.todomail.util.doesSupportTiles
-import bobko.todomail.util.stringSharedPref
+import bobko.todomail.pref.stringSharedPref
 
 object PrefManager {
     val prefillWithClipboardWhenStartedFromLauncher by booleanSharedPref(defaultValue = false)

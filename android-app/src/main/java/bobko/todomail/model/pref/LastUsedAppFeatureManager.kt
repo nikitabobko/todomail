@@ -4,6 +4,7 @@ import android.app.AppOpsManager
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import androidx.core.content.getSystemService
+import bobko.todomail.pref.booleanSharedPref
 import bobko.todomail.util.*
 
 object LastUsedAppFeatureManager {

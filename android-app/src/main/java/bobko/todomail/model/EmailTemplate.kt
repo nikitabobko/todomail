@@ -1,5 +1,9 @@
 package bobko.todomail.model
 
+import bobko.todomail.pref.ListSharedPref
+import bobko.todomail.pref.SharedPref
+import bobko.todomail.pref.intSharedPref
+import bobko.todomail.pref.stringSharedPref
 import bobko.todomail.util.*
 
 data class EmailTemplate(

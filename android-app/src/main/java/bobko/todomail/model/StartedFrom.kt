@@ -1,7 +1,7 @@
 package bobko.todomail.model
 
 import bobko.todomail.model.pref.PrefManager
-import bobko.todomail.util.SharedPref
+import bobko.todomail.pref.SharedPref
 
 enum class StartedFrom(
     val text: String,

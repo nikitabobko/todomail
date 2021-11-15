@@ -1,6 +1,9 @@
 package bobko.todomail.model
 
 import android.content.Context
+import bobko.todomail.pref.ListSharedPref
+import bobko.todomail.pref.SharedPref
+import bobko.todomail.pref.intSharedPref
 import bobko.todomail.util.*
 
 data class UniqueSmtpCredential private constructor(val id: Int, val credential: SmtpCredential) {

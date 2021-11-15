@@ -1,4 +1,7 @@
-package bobko.todomail.util
+package bobko.todomail.pref
+
+import bobko.todomail.util.PrefReaderDslReceiver
+import bobko.todomail.util.PrefWriterDslReceiver
 
 open class ListSharedPref<T : Any>(
     propertyReceiver: Any?,
