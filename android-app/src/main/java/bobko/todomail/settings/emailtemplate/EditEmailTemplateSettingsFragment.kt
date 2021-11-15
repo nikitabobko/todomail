@@ -26,7 +26,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.SmtpCredential
-import bobko.todomail.model.UniqueSmtpCredential
+import bobko.todomail.model.UniqueEmailCredential
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.settings.SettingsScreen
 import bobko.todomail.util.*
@@ -57,7 +57,7 @@ private fun EditEmailTemplateSettingsFragment.EditEmailTemplateSettingsFragmentS
             viewModel.emailTemplate.observeAsMutableState { // TODO add screen rotation test
                 parentActivity().viewModel.emailTemplateToEdit ?: EmailTemplate(
                     suggestEmailTemplateLabel(requireContext()), "",
-                    UniqueSmtpCredential.new(
+                    UniqueEmailCredential.new(
                         SmtpCredential("", DEFAULT_SMTP_PORT, "", ""),
                         requireContext()
                     )

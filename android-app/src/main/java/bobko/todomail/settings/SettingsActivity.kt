@@ -14,6 +14,7 @@ import androidx.lifecycle.ViewModel
 import bobko.todomail.R
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.SmtpCredential
+import bobko.todomail.util.cast
 
 class SettingsActivity : AppCompatActivity() {
     val viewModel: SettingsActivityViewModel by viewModels()
@@ -66,8 +67,11 @@ enum class KnownSmtpCredential(
     open fun suggestEmailSuffix(currentLabel: String) = "@$domain"
 
     companion object {
-        fun findBySmtpServer(template: EmailTemplate): KnownSmtpCredential? =
-            values().singleOrNull { it.smtpCredential.smtpServer == template.uniqueCredential.credential.smtpServer }
+        fun findBySmtpServer(template: EmailTemplate) =
+            template.uniqueCredential.credential.cast<SmtpCredential>()?.smtpServer
+                ?.let { smtpServer ->
+                    values().singleOrNull { it.smtpCredential.smtpServer == smtpServer }
+                }
     }
 }
 

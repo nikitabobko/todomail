@@ -15,6 +15,7 @@ import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import java.lang.IllegalStateException
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberFunctions
@@ -78,9 +79,11 @@ fun <T : Any, V> T.copy(property: KProperty<V>, value: V): T {
     return copyMethod.callBy(mapOf(instanceParam to this, parameterToAmend to value)) as T
 }
 
-inline fun <reified T : Any> Any.cast(): T? = this as? T
+inline fun <reified T : Any> Any.cast(): T? = this as? T // TODO remove?
 
 @Composable
 fun CenteredRow(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, content = content)
 }
+
+fun errorException(throwable: Throwable): Nothing = throw IllegalStateException(throwable)

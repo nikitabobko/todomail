@@ -1,16 +1,24 @@
 package bobko.todomail.model
 
+import androidx.activity.ComponentActivity
+import bobko.todomail.login.createEmail
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.intSharedPref
 import bobko.todomail.pref.stringSharedPref
-import bobko.todomail.util.*
+import bobko.todomail.util.PrefReaderDslReceiver
+import bobko.todomail.util.PrefWriterDslReceiver
+import java.util.*
+import javax.mail.Authenticator
+import javax.mail.PasswordAuthentication
+import javax.mail.Session
+import javax.mail.Transport
 
 data class SmtpCredential(
     val smtpServer: String,
     val smtpServerPort: Int,
-    val username: String,
+    override val username: String,
     val password: String,
-) {
+) : EmailCredential() {
     class Pref(index: Int) : SharedPref<SmtpCredential>(null) {
         private val smtpServer by stringSharedPref("", index.toString())
         private val smtpServerPort by intSharedPref(0, index.toString())
@@ -30,5 +38,25 @@ data class SmtpCredential(
             smtpUsername.read(),
             smtpPassword.read(),
         )
+    }
+
+    override suspend fun sendEmail(
+        activity: ComponentActivity,
+        to: String,
+        subject: String,
+        body: String
+    ) {
+        val prop = Properties().apply {
+            this["mail.smtp.host"] = smtpServer
+            this["mail.smtp.port"] = smtpServerPort
+            this["mail.smtp.auth"] = "true"
+            this["mail.smtp.starttls.enable"] = "true"
+        }
+        val session = object : Authenticator() {
+            override fun getPasswordAuthentication(): PasswordAuthentication {
+                return PasswordAuthentication(username, password)
+            }
+        }
+        Transport.send(createEmail(to, subject, body, Session.getInstance(prop, session)))
     }
 }

@@ -88,6 +88,7 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
             excludes += "META-INF/NOTICE.md"
             excludes += "META-INF/LICENSE.md"
+            excludes += "META-INF/DEPENDENCIES"
         }
     }
 }
@@ -105,6 +106,13 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.4.0-rc01")
     implementation("androidx.compose.runtime:runtime-livedata:1.1.0-alpha06")
     implementation("androidx.preference:preference-ktx:1.1.1")
+
+    implementation("com.github.kittinunf.fuel:fuel:2.3.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.0")
+    implementation("com.github.kittinunf.fuel:fuel-jackson:2.3.1")
+
+    // Login with Google
+    implementation("com.google.android.gms:play-services-auth:19.2.0")
 
     // JetPack navigation
     implementation("androidx.navigation:navigation-fragment-ktx:${rootProject.extra["nav_version"]}")

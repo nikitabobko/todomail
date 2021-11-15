@@ -1,7 +1,7 @@
 package bobko.todomail.model.pref
 
 import bobko.todomail.model.EmailTemplate
-import bobko.todomail.model.UniqueSmtpCredential
+import bobko.todomail.model.UniqueEmailCredential
 import bobko.todomail.pref.booleanSharedPref
 import bobko.todomail.util.doesSupportTiles
 import bobko.todomail.pref.stringSharedPref
@@ -26,6 +26,6 @@ object PrefManager {
         LastUsedAppFeatureManager.appendAppNameThatSharedTheText,
         LastUsedAppFeatureManager.isUsageAccessPromptShowedAtLeastOnce,
         EmailTemplate.All,
-        UniqueSmtpCredential.All
+        UniqueEmailCredential.All
     )
 }
