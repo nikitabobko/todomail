@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.getSystemService
 import bobko.todomail.model.EmailTemplate
+import bobko.todomail.model.EmailTemplateRaw
 import bobko.todomail.model.StartedFrom
 import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.settings.SettingsActivity
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun MainActivity.MainActivityScreen(accountsLive: InitializedLiveData<List<EmailTemplate>>) {
+fun MainActivity.MainActivityScreen(accountsLive: InitializedLiveData<List<EmailTemplateRaw>>) {
     EmailTodoTheme {
         Column {
             // Transparent Surface for keeping space for Android context menu
@@ -154,7 +155,7 @@ fun MainActivity.MainActivityScreen(accountsLive: InitializedLiveData<List<Email
 }
 
 @Composable
-private fun MainActivity.TextFieldAndButtons(accountsLive: InitializedLiveData<List<EmailTemplate>>) {
+private fun MainActivity.TextFieldAndButtons(accountsLive: InitializedLiveData<List<EmailTemplateRaw>>) {
     Column(
         modifier = Modifier
             .padding(8.dp)
@@ -205,7 +206,7 @@ private fun MainActivity.Buttons(
     todoTextDraft: MutableState<TextFieldValue>,
     isError: MutableState<Boolean>,
     sendInProgress: MutableState<Boolean>,
-    accountsLive: InitializedLiveData<List<EmailTemplate>>
+    accountsLive: InitializedLiveData<List<EmailTemplateRaw>>
 ) {
     val canStartSending = !sendInProgress.value && todoTextDraft.value.text.isNotBlank()
     val unspecifiedOrErrorColor =
@@ -227,7 +228,7 @@ private fun MainActivity.Buttons(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        val onClick = { emailTemplate: EmailTemplate ->
+        val onClick = { emailTemplate: EmailTemplateRaw ->
             scope.launch {
                 val prevText = todoTextDraft.value.text
                 sendInProgress.value = true

@@ -16,9 +16,12 @@ import javax.mail.Transport
 data class SmtpCredential(
     val smtpServer: String,
     val smtpServerPort: Int,
-    override val username: String,
+    val username: String,
     val password: String,
 ) : EmailCredential() {
+    override val label: String
+        get() = "$username (SMTP)"
+
     class Pref(index: Int) : SharedPref<SmtpCredential>(null) {
         private val smtpServer by stringSharedPref("", index.toString())
         private val smtpServerPort by intSharedPref(0, index.toString())

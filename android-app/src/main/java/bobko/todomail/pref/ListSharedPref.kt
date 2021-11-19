@@ -19,7 +19,10 @@ open class ListSharedPref<T : Any>(
         }
         size.write(value?.size)
     }
-
-    override fun PrefReaderDslReceiver.read() =
+    
+    protected fun readImpl(receiver: PrefReaderDslReceiver) = with(receiver) {
         (0 until size.read()).map { itemSharedPref(it).read() }
+    } 
+
+    override fun PrefReaderDslReceiver.read() = readImpl(this)
 }

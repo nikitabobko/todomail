@@ -1,6 +1,7 @@
 package bobko.todomail.model.pref
 
 import bobko.todomail.model.EmailTemplate
+import bobko.todomail.model.EmailTemplateRaw
 import bobko.todomail.model.UniqueEmailCredential
 import bobko.todomail.pref.booleanSharedPref
 import bobko.todomail.util.doesSupportTiles

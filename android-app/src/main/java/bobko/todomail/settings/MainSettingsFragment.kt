@@ -22,8 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
-import bobko.todomail.model.StartedFrom
 import bobko.todomail.model.EmailTemplate
+import bobko.todomail.model.StartedFrom
+import bobko.todomail.model.EmailTemplateRaw
 import bobko.todomail.util.*
 
 class MainSettingsFragment : Fragment() {
@@ -47,7 +48,7 @@ class MainSettingsFragment : Fragment() {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveData<List<EmailTemplate>>) {
+fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveData<List<EmailTemplateRaw>>) {
     SettingsScreen("Todomail Settings", rootSettingsScreen = true) {
         TextDivider("Templates")
         TemplatesSection(accounts)
@@ -89,7 +90,7 @@ fun calculateIndexOffset(pixelOffset: Int, itemHeight: Int) =
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MainSettingsFragment.TemplatesSection(
-    accountsLiveData: InitializedLiveData<List<EmailTemplate>>
+    accountsLiveData: InitializedLiveData<List<EmailTemplateRaw>>
 ) {
     val accounts by accountsLiveData.observeAsState()
     var offsets by remember(accounts.size) { mutableStateOf(List(accounts.size) { 0 }) }

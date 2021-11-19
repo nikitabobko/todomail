@@ -17,14 +17,14 @@ class LensTest {
     fun testSet() {
         val expectedValue = "expected value"
         val init = Foo(Bar(""))
-        Assert.assertEquals(expectedValue, Foo::bar.then { ::text }.set(init, expectedValue).bar.text)
-        Assert.assertEquals(init.copy(bar = Bar(expectedValue)), Foo::bar.then { ::text }.set(init, expectedValue))
+        Assert.assertEquals(expectedValue, Foo::bar.map { ::text }.set(init, expectedValue).bar.text)
+        Assert.assertEquals(init.copy(bar = Bar(expectedValue)), Foo::bar.map { ::text }.set(init, expectedValue))
     }
 
     @Test
     fun testGet() {
         val expectedValue = "expected value"
-        Assert.assertEquals(expectedValue, Foo::bar.then { ::text }.get(Foo(Bar(expectedValue))))
+        Assert.assertEquals(expectedValue, Foo::bar.map { ::text }.get(Foo(Bar(expectedValue))))
     }
 
     @Test
@@ -34,7 +34,7 @@ class LensTest {
             fail()
         } catch (ignored: IllegalArgumentException) { }
         try {
-            Foo::notDataClass.then { ::text }
+            Foo::notDataClass.map { ::text }
             fail()
         } catch (ignored: IllegalArgumentException) { }
     }

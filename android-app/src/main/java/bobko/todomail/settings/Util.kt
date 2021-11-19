@@ -29,7 +29,6 @@ fun Fragment.SettingsScreen(
 ) {
     EmailTodoTheme {
         Surface {
-            val scrollState = rememberScrollState()
             Column {
                 TopAppBar(
                     modifier = Modifier.fillMaxWidth(),
@@ -48,7 +47,7 @@ fun Fragment.SettingsScreen(
                         }
                     }
                 )
-                Column(modifier = Modifier.verticalScroll(scrollState)) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     content()
                 }
             }

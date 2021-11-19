@@ -4,7 +4,10 @@ import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import bobko.todomail.login.createEmail
+import bobko.todomail.util.InitializedLiveData
+import bobko.todomail.util.MutableInitializedLiveData
 import bobko.todomail.util.errorException
+import bobko.todomail.util.mutableLiveDataOf
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.isSuccessful
 import com.github.kittinunf.fuel.httpPost
@@ -28,8 +31,8 @@ object GoogleEmailCredential : EmailCredential() {
     private const val serverClientId =
         "473994673878-hpbjfm51euanc0molpthbesm82u3eatl.apps.googleusercontent.com"
 
-    override var username: String? = null
-        private set
+    override val label: String
+        get() = email?.let { "Google ($it)" } ?: "Sign in with Google"
 
     /**
      * https://developers.google.com/gmail/api/guides/sending
@@ -73,8 +76,7 @@ object GoogleEmailCredential : EmailCredential() {
 
     suspend fun signIn(activity: ComponentActivity): GoogleSignInAccount? {
         GoogleSignIn.getLastSignedInAccount(activity)?.let {
-            username = it.email
-            return it
+            return updateSignInStatus(it)
         }
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -89,19 +91,28 @@ object GoogleEmailCredential : EmailCredential() {
                 GoogleSignIn.getSignedInAccountFromIntent(activityResult.data)
                     .addOnCompleteListener { task ->
                         try {
-                            username = task.result.email
-                            continuation.resume(task.result)
+                            continuation.resume(updateSignInStatus(task.result))
                         } catch (ex: Throwable) {
                             // TODO log
-                            continuation.resume(null)
+                            continuation.resume(updateSignInStatus(null))
                         }
                     }
             }.launch(GoogleSignIn.getClient(activity, gso).signInIntent)
         }
     }
 
+    private var email: String? = null
+    private var _signed: MutableInitializedLiveData<Boolean> = mutableLiveDataOf(false)
+    val signed: InitializedLiveData<Boolean>
+        get() = _signed
+
+    private fun updateSignInStatus(account: GoogleSignInAccount?) = account.also {
+        email = it?.email
+        _signed.value = it != null
+    }
+
     fun signOut() {
-        username = null
+        updateSignInStatus(null)
     }
 }
 

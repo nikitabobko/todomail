@@ -9,9 +9,6 @@
             android:name="bobko.todomail.settings.MainSettingsFragment"
             android:label="MainSettingsFragment">
         <action
-                android:id="@+id/action_mainSettingsFragment_to_addAccountSettingsWizardFragment"
-                app:destination="@id/addAccountSettingsWizardFragment" />
-        <action
                 android:id="@+id/action_mainSettingsFragment_to_editEmailTemplateSettingsFragment"
                 app:destination="@id/editEmailTemplateSettingsFragment"
                 app:enterAnim="@anim/nav_default_enter_anim"
@@ -30,16 +27,15 @@
     <fragment
             android:id="@+id/editEmailTemplateSettingsFragment"
             android:name="bobko.todomail.settings.emailtemplate.EditEmailTemplateSettingsFragment"
-            android:label="EditEmailTemplateSettingsFragment" />
-    <dialog
-            android:id="@+id/addAccountSettingsWizardFragment"
-            android:name="bobko.todomail.settings.AddAccountSettingsWizardFragment"
-            android:label="AddAccountSettingsWizardFragment">
+            android:label="EditEmailTemplateSettingsFragment" >
         <action
-                android:id="@+id/action_addAccountSettingsWizardFragment_to_addAccountSettingsFragmentDialog"
-                app:destination="@id/editEmailTemplateSettingsFragment"
-                app:popUpTo="@id/mainSettingsFragment" />
-    </dialog>
+                android:id="@+id/action_editEmailTemplateSettingsFragment_to_chooseEmailCredentialTypeDialogFragment"
+                app:destination="@id/chooseEmailCredentialTypeDialogFragment" />
+    </fragment>
+    <dialog
+            android:id="@+id/chooseEmailCredentialTypeDialogFragment"
+            android:name="bobko.todomail.settings.ChooseEmailCredentialTypeDialogFragment"
+            android:label="ChooseEmailCredentialTypeDialogFragment"/>
     <fragment
             android:id="@+id/textPrefillSettingsFragment"
             android:name="bobko.todomail.settings.TextPrefillSettingsFragment"
