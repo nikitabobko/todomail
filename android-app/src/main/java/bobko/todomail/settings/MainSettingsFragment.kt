@@ -22,9 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
-import bobko.todomail.model.EmailTemplate
-import bobko.todomail.model.StartedFrom
-import bobko.todomail.model.EmailTemplateRaw
+import bobko.todomail.model.*
 import bobko.todomail.util.*
 
 class MainSettingsFragment : Fragment() {
@@ -165,14 +163,10 @@ private fun MainSettingsFragment.TemplatesSection(
                 )
             },
             text = {
-                Row {
-                    Text(text = emailTemplate.label)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(text = "From: " + emailTemplate.uniqueCredential.credential.username)
-                        Text(text = "To: " + emailTemplate.sendTo)
-                    }
-                }
+                Text(text = "${emailTemplate.label} (TO: ${emailTemplate.sendTo})")
+            },
+            secondaryText = {
+                Text("FROM: ${emailTemplate.uniqueCredential.credential.getLabel(requireContext())}")
             }
         )
     }

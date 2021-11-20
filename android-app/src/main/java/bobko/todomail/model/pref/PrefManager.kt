@@ -24,6 +24,7 @@ object PrefManager {
         closeDialogAfterSendWhenStartedFromSharesheet,
         closeDialogAfterSendWhenStartedFromTile,
         todoDraft,
+        UniqueEmailCredential.uniqueCredentialId,
         LastUsedAppFeatureManager.appendAppNameThatSharedTheText,
         LastUsedAppFeatureManager.isUsageAccessPromptShowedAtLeastOnce,
         EmailTemplate.All,

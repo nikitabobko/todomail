@@ -1,10 +1,7 @@
 package bobko.todomail.model
 
 import androidx.activity.ComponentActivity
-import bobko.todomail.pref.ListSharedPref
-import bobko.todomail.pref.SharedPref
-import bobko.todomail.pref.intSharedPref
-import bobko.todomail.pref.stringSharedPref
+import bobko.todomail.pref.*
 import bobko.todomail.util.*
 
 typealias EmailTemplateRaw = EmailTemplate<*>
@@ -17,11 +14,9 @@ data class EmailTemplate<out T : EmailCredential>(
     object All : SharedPref<List<EmailTemplateRaw>>(null) {
         private val uniqueSuffix get() = EmailTemplate::class.simpleName!!
 
-        override fun PrefWriterDslReceiver.write(value: List<EmailTemplateRaw>?) {
-            val idToCredential =
-                value?.associate { it.uniqueCredential.id to it.uniqueCredential } ?: emptyMap()
+        override fun PrefWriterDslReceiver.writeImpl(value: List<EmailTemplateRaw>?) {
             UniqueEmailCredential.All.write(value?.map { it.uniqueCredential })
-            ListSharedPref(null, uniqueSuffix) { Pref(it, idToCredential) }.write(value)
+            ListSharedPref(null, uniqueSuffix) { Pref(it, mapOf()) }.write(value)
         }
 
         override fun PrefReaderDslReceiver.read(): List<EmailTemplateRaw> {
@@ -37,7 +32,7 @@ data class EmailTemplate<out T : EmailCredential>(
         val emailTemplateSendTo by stringSharedPref("", index.toString())
         val emailTemplateCredentialId by intSharedPref(0, index.toString())
 
-        override fun PrefWriterDslReceiver.write(value: EmailTemplateRaw?) {
+        override fun PrefWriterDslReceiver.writeImpl(value: EmailTemplateRaw?) {
             emailTemplateLabel.write(value?.label)
             emailTemplateSendTo.write(value?.sendTo)
             emailTemplateCredentialId.write(value?.uniqueCredential?.id)
@@ -54,7 +49,7 @@ data class EmailTemplate<out T : EmailCredential>(
         }
     }
 
-    suspend fun sendEmail(activity: ComponentActivity, subject: String, body: String) {
-        uniqueCredential.credential.sendEmail(activity, sendTo, subject, body)
+    fun sendEmail(activity: ComponentActivity, subject: String, body: String) {
+//        uniqueCredential.credential.sendEmail(activity, sendTo, subject, body)
     }
 }

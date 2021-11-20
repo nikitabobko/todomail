@@ -9,7 +9,12 @@ import kotlin.reflect.KProperty
 abstract class SharedPref<T : Any>(
     private val propertyReceiver: Any?
 ) : ReadOnlyProperty<Any?, SharedPref<T>> {
-    abstract fun PrefWriterDslReceiver.write(value: T?)
+    fun PrefWriterDslReceiver.write(value: T?) {
+        writeImpl(value)
+        _liveData.get()?.let { it.value = value ?: read() }
+    }
+
+    abstract fun PrefWriterDslReceiver.writeImpl(value: T?)
     abstract fun PrefReaderDslReceiver.read(): T
 
     private var _liveData = WeakReference<MutableInitializedLiveData<T>>(null)

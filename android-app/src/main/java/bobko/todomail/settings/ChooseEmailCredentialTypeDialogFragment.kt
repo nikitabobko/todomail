@@ -16,12 +16,12 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.coroutineScope
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.model.*
+import bobko.todomail.settings.emailtemplate.suggestEmailTemplate
 import bobko.todomail.settings.emailtemplate.suggestEmailTemplateLabel
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.CenteredRow
@@ -29,6 +29,7 @@ import bobko.todomail.util.composeView
 import bobko.todomail.util.observeAsState
 import bobko.todomail.util.readPref
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import kotlinx.coroutines.launch
 
 class ChooseEmailCredentialTypeDialogFragment : BottomSheetDialogFragment() {
     fun parentActivity() = requireActivity() as SettingsActivity
@@ -73,45 +74,47 @@ private class CredentialTypeComparator : Comparator<EmailCredential> {
 @Composable
 private fun ChooseEmailCredentialTypeDialogFragment.Items() {
     Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-        requireContext().readPref { UniqueEmailCredential.All.liveData }.observeAsState().value
+        val existingCredentials = requireContext().readPref { UniqueEmailCredential.All.liveData }
+            .observeAsState()
+            .value
             .sortedWith(
                 compareBy<UniqueEmailCredential<*>, EmailCredential>(CredentialTypeComparator()) { it.credential }
-                    .thenBy { it.credential.label }
+                    .thenBy { it.credential.getLabel(requireContext()) }
             )
-            .takeIf { it.isNotEmpty() }
-            ?.let { existingCredentials ->
-                existingCredentials.forEach {
-                    MailItem(
-                        text = it.credential.label,
-                        uniqueEmailCredential = it
-                    )
-                }
 
-                Divider()
-            }
+        existingCredentials.forEach {
+            MailItem(
+                text = it.credential.getLabel(requireContext()),
+                uniqueEmailCredential = it
+            )
+        }
 
-        AnimatedVisibility(visible = !GoogleEmailCredential.signed.observeAsState().value) {
-            MailItem(text = GoogleEmailCredential.label, uniqueEmailCredential = ) // TODO
+        if (existingCredentials.isNotEmpty()) {
+            Divider()
+        }
+
+        AnimatedVisibility(visible = !GoogleEmailCredential.isSigned(requireContext()).observeAsState().value) {
+            MailItem(
+                text = GoogleEmailCredential.getLabel(requireContext()),
+                uniqueEmailCredential = UniqueEmailCredential.new(GoogleEmailCredential, requireContext())
+            )
         }
 
         KnownSmtpCredential.values().forEach {
             MailItem(
                 text = it.label,
-                uniqueEmailCredential = UniqueEmailCredential.new(
-                    it.smtpCredential,
-                    requireContext()
-                )
+                uniqueEmailCredential = UniqueEmailCredential.new(it.smtpCredential, requireContext())
             )
         }
         MailItem(
             "Email (SMTP)",
-            uniqueEmailCredential = null
+            uniqueEmailCredential = UniqueEmailCredential.new(SmtpCredential.default, requireContext())
         )
     }
 }
 
 @Composable
-private fun DefaultEmailIcon() {
+fun DefaultEmailIcon() {
     Icon(
         Icons.Rounded.Email,
         "Email (SMTP)",
@@ -123,28 +126,46 @@ private fun DefaultEmailIcon() {
 @Composable
 private fun ChooseEmailCredentialTypeDialogFragment.MailItem(
     text: String,
-    uniqueEmailCredential: UniqueEmailCredential<*>?
+    uniqueEmailCredential: UniqueEmailCredential<*>
 ) {
     ListItem(
         modifier = Modifier.clickable {
-            parentActivity().viewModel.emailTemplateToEdit = uniqueEmailCredential?.let {
-                EmailTemplateRaw(
-                    suggestEmailTemplateLabel(requireContext()),
-                    "",
-                    uniqueEmailCredential
-                )
+            lifecycle.coroutineScope.launch {
+                val success = if (uniqueEmailCredential.credential == GoogleEmailCredential &&
+                    !GoogleEmailCredential.isSigned(requireContext()).value
+                ) {
+                    GoogleEmailCredential.signIn(requireContext(), parentActivity().signInActivityForResult)
+                        ?.let { true }
+                        ?: false
+                } else {
+                    true
+                }
+                if (success) {
+                    parentActivity().viewModel.emailTemplateDraft.value = EmailTemplateRaw(
+                        suggestEmailTemplateLabel(requireContext()),
+                        "",
+                        uniqueEmailCredential
+                    )
+                    findNavController().navigateUp()
+                }
             }
-            findNavController().navigateUp()
+        },
+        trailing = {
+            if (uniqueEmailCredential.credential == GoogleEmailCredential && GoogleEmailCredential.isSigned(requireContext()).value) {
+                TextButton(
+                    onClick = {
+                        lifecycle.coroutineScope.launch {
+                            GoogleEmailCredential.signOut(requireContext())
+                            parentActivity().viewModel.emailTemplateDraft.value = suggestEmailTemplate(requireContext())
+                        }
+                    }
+                ) {
+                    Text("Sign out")
+                }
+            }
         },
         icon = {
-            when (val credential = uniqueEmailCredential?.credential) {
-                GoogleEmailCredential -> {
-                    // TODO
-                }
-                is SmtpCredential -> {
-                    KnownSmtpCredential.findBySmtpServer(credential) ?: DefaultEmailIcon()
-                }
-            }
+            uniqueEmailCredential.credential.Icon()
         }
     ) {
         Text(text)

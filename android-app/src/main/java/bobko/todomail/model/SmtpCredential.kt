@@ -1,5 +1,6 @@
 package bobko.todomail.model
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import bobko.todomail.login.createEmail
 import bobko.todomail.pref.SharedPref
@@ -13,14 +14,23 @@ import javax.mail.PasswordAuthentication
 import javax.mail.Session
 import javax.mail.Transport
 
+private const val DEFAULT_SMTP_PORT = 25
+
 data class SmtpCredential(
     val smtpServer: String,
     val smtpServerPort: Int,
     val username: String,
     val password: String,
 ) : EmailCredential() {
-    override val label: String
-        get() = "$username (SMTP)"
+    override fun getLabel(context: Context): String = if (username.isEmpty()) "SMTP" else "$username (SMTP)"
+
+    override suspend fun signOut(context: Context) {
+        // Nothing to do
+    }
+
+    companion object {
+        val default get() = SmtpCredential("", DEFAULT_SMTP_PORT, "", "")
+    }
 
     class Pref(index: Int) : SharedPref<SmtpCredential>(null) {
         private val smtpServer by stringSharedPref("", index.toString())
@@ -28,7 +38,7 @@ data class SmtpCredential(
         private val smtpUsername by stringSharedPref("", index.toString())
         private val smtpPassword by stringSharedPref("", index.toString())
 
-        override fun PrefWriterDslReceiver.write(value: SmtpCredential?) {
+        override fun PrefWriterDslReceiver.writeImpl(value: SmtpCredential?) {
             smtpServer.write(value?.smtpServer)
             smtpServerPort.write(value?.smtpServerPort)
             smtpUsername.write(value?.username)
@@ -43,7 +53,7 @@ data class SmtpCredential(
         )
     }
 
-    override suspend fun sendEmail(
+    fun sendEmail(
         activity: ComponentActivity,
         to: String,
         subject: String,

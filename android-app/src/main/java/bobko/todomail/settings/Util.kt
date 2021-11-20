@@ -57,14 +57,6 @@ fun Fragment.SettingsScreen(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TextDivider(text: String) {
-    ListItem(modifier = Modifier.height(32.dp)) {
-        Text(text, color = MaterialTheme.colors.primary, style = MaterialTheme.typography.subtitle2)
-    }
-}
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
 fun SwitchOrCheckBoxItem(
     text: String,
     checked: Boolean,

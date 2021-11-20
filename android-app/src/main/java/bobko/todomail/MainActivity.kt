@@ -31,9 +31,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.getSystemService
-import bobko.todomail.model.EmailTemplate
-import bobko.todomail.model.EmailTemplateRaw
-import bobko.todomail.model.StartedFrom
+import bobko.todomail.model.*
 import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.theme.EmailTodoTheme
@@ -208,6 +206,7 @@ private fun MainActivity.Buttons(
     sendInProgress: MutableState<Boolean>,
     accountsLive: InitializedLiveData<List<EmailTemplateRaw>>
 ) {
+    val context = this
     val canStartSending = !sendInProgress.value && todoTextDraft.value.text.isNotBlank()
     val unspecifiedOrErrorColor =
         if (isError.value && canStartSending) MaterialTheme.colors.error else Color.Unspecified
@@ -243,6 +242,8 @@ private fun MainActivity.Buttons(
                     }
                     isError.value = false
                     showToast("Successful!")
+                    // We have to garbage collect the credentials at some point. Why not to do it whenever new todo is sent?
+                    writePref { garbageCollectUnreachableCredentials(context) }
                     val shouldCloseAfterSend =
                         readPref { viewModel.startedFrom.closeAfterSendPrefKey.read() }
                     if (shouldCloseAfterSend) {

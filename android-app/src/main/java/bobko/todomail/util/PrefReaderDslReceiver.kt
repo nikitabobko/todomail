@@ -25,10 +25,10 @@ class PrefWriterDslReceiver(
     }
 }
 
-fun <T> Context.readPref(body: PrefReaderDslReceiver.() -> T) =
+inline fun <T> Context.readPref(body: PrefReaderDslReceiver.() -> T) =
     PrefReaderDslReceiver(PreferenceManager.getDefaultSharedPreferences(this)).body()
 
-fun <T> Context.writePref(body: PrefWriterDslReceiver.() -> T): T {
+inline fun <T> Context.writePref(body: PrefWriterDslReceiver.() -> T): T {
     val pref = PreferenceManager.getDefaultSharedPreferences(this)
     val editor = pref.edit()
     return PrefWriterDslReceiver(pref, editor).body().also { editor.apply() }
