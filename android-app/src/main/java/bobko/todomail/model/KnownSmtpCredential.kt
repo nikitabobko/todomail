@@ -15,7 +15,7 @@ enum class KnownSmtpCredential(
     @DrawableRes val iconResId: Int,
     val smtpCredential: SmtpCredential,
     val domain: String,
-) : ComposeIconProvider {
+) {
     Gmail(
         "Gmail (SMTP)",
         R.drawable.ic_gmail_icon,
@@ -40,7 +40,7 @@ enum class KnownSmtpCredential(
     );
 
     @Composable
-    override fun Icon() {
+    fun Icon() {
         Icon(
             painterResource(id = iconResId),
             contentDescription = label,

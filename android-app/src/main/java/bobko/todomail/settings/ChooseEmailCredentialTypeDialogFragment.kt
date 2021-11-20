@@ -141,10 +141,11 @@ private fun ChooseEmailCredentialTypeDialogFragment.MailItem(
                     true
                 }
                 if (success) {
-                    parentActivity().viewModel.emailTemplateDraft.value = EmailTemplateRaw(
+                    parentActivity().viewModel.emailTemplateDraft.value = EmailTemplate.new(
                         suggestEmailTemplateLabel(requireContext()),
                         "",
-                        uniqueEmailCredential
+                        uniqueEmailCredential,
+                        requireContext()
                     )
                     findNavController().navigateUp()
                 }

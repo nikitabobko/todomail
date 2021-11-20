@@ -43,13 +43,13 @@ object GoogleEmailCredential : EmailCredential() {
      * https://developers.google.com/gmail/api/guides/sending
      * https://developers.google.com/gmail/api/reference/rest/v1/users.messages/send
      */
-    fun sendEmail(
+    override fun sendEmail(
         context: Context,
         to: String,
         subject: String,
         body: String
     ) {
-        val account = runBlocking { signIn(context, TODO()) ?: error("User isn't signed it") }
+        val account = getSignedAccount(context) ?: error("User isn't signed it")
 
         val accessToken = "https://accounts.google.com/o/oauth2/token"
             .httpPost(
@@ -104,7 +104,7 @@ object GoogleEmailCredential : EmailCredential() {
             .requestEmail()
             .build()
 
-    private var continuation: Continuation<GoogleSignInAccount?>? = null // TODO actor pattern? channel?
+    private var continuation: Continuation<GoogleSignInAccount?>? = null // TODO It looks hacky. actor pattern? channel?
 
     suspend fun signIn(context: Context, launcher: ActivityResultLauncher<Intent>): GoogleSignInAccount? {
         return updateSignInStatus(
@@ -116,16 +116,19 @@ object GoogleEmailCredential : EmailCredential() {
         )
     }
 
-    private var email: String? = null
+    override var email: String? = null
+        private set
     private var _signed: MutableInitializedLiveData<Boolean> = mutableLiveDataOf(false)
 
+    private fun getSignedAccount(context: Context) = GoogleSignIn.getLastSignedInAccount(context)
+
     fun isSigned(context: Context): InitializedLiveData<Boolean> {
-        initSignInStatus(GoogleSignIn.getLastSignedInAccount(context))
+        initSignInStatus(getSignedAccount(context))
         return _signed
     }
 
     override fun getLabel(context: Context): String {
-        initSignInStatus(GoogleSignIn.getLastSignedInAccount(context))
+        initSignInStatus(getSignedAccount(context))
         return email?.let { "Google ($it)" } ?: "Sign in with Google"
     }
 

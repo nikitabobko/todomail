@@ -1,6 +1,5 @@
 package bobko.todomail.settings.emailtemplate
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.os.Bundle
@@ -24,14 +23,13 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
 import bobko.todomail.model.*
-import bobko.todomail.settings.DefaultEmailIcon
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.settings.SettingsScreen
 import bobko.todomail.util.*
 
 class EditEmailTemplateSettingsFragment : Fragment() {
     val viewModel by viewModels<EditEmailTemplateSettingsFragmentViewModel>()
-    private fun parentActivity() = requireActivity() as SettingsActivity
+    fun parentActivity() = requireActivity() as SettingsActivity
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,11 +37,12 @@ class EditEmailTemplateSettingsFragment : Fragment() {
         savedInstanceState: Bundle?
     ) = requireContext().composeView {
         val existingTemplates = requireContext().readPref { EmailTemplate.All.read() }
+        val emailTemplateDraftLive = parentActivity().viewModel.emailTemplateDraft
         val mode =
-            if (parentActivity().viewModel.emailTemplateDraft.value in existingTemplates) Mode.Edit
+            if (emailTemplateDraftLive.value.id in existingTemplates.mapTo(mutableSetOf()) { it.id }) Mode.Edit
             else Mode.Add
         // TODO add screen rotation test
-        val emailTemplate = parentActivity().viewModel.emailTemplateDraft.observeAsMutableState()
+        val emailTemplate = emailTemplateDraftLive.observeAsMutableState()
 
         EditEmailTemplateSettingsFragmentScreen(emailTemplate, mode)
     }
@@ -62,53 +61,50 @@ private fun <TEmailCredential : EmailCredential> EditEmailTemplateSettingsFragme
     emailTemplate: MutableState<EmailTemplate<TEmailCredential>>,
     mode: Mode
 ) {
-    SettingsScreen("Edit Email Template Settings") {
-        val label = remember { LabelTextFieldItem<TEmailCredential>(requireContext()) }
+    SettingsScreen("${mode.string} Email Template") {
+        val label = remember { LabelTextFieldItem(emailTemplate.value, requireContext()) }
+        val sendTo = remember { SendToTextFieldItem<TEmailCredential>() }
         val smtpFields = remember { getSmtpFields() }
-        val fields: List<TextFieldItem<*, TEmailCredential>> = when (emailTemplate.value.uniqueCredential.credential) {
-            GoogleEmailCredential -> listOf()
-            is SmtpCredential -> smtpFields as List<TextFieldItem<*, TEmailCredential>>
-            else -> error("Unknown credential type")
-        }
-        val destinationAddress = remember { SendToTextFieldItem<TEmailCredential>() }
-        val schema = listOf(label) + fields + destinationAddress
+        val fields =
+            when (emailTemplate.value.uniqueCredential.credential) {
+                GoogleEmailCredential -> listOf(label, sendTo)
+                is SmtpCredential -> {
+                    (listOf(label) + smtpFields + sendTo) as List<TextFieldItem<*, TEmailCredential>>
+                }
+                else -> error("Unknown credential type")
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
-        label.Content(emailTemplate, viewModel)
+        label.Content(emailTemplate, fields, viewModel)
         MyTextDivider("Credentials settings")
         CredentialsTypeSpinner(emailTemplate)
 
-        var lastUsedSmtpForAnimation by remember {
-            mutableStateOf(
-                EmailTemplate(
-                    emailTemplate.value.label,
-                    emailTemplate.value.sendTo,
-                    UniqueEmailCredential.new(SmtpCredential.default, requireContext())
-                )
+        AnimatedContent(
+            targetState = TargetWithContext(
+                emailTemplate.value.uniqueCredential.credential::class,
+                emailTemplate.value to fields
             )
-        }
-
-        AnimatedVisibility(
-            visible = fields.isNotEmpty(),
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            Column {
-                when (emailTemplate.value.uniqueCredential.credential) {
-                    GoogleEmailCredential -> {
-                        smtpFields.forEach { it.Content(mutableStateOf(lastUsedSmtpForAnimation), viewModel) }
-                    }
-                    is SmtpCredential -> {
-                        emailTemplate as MutableState<EmailTemplate<SmtpCredential>>
-                        lastUsedSmtpForAnimation = emailTemplate.value
-                        smtpFields.forEach { it.Content(emailTemplate, viewModel) }
+        ) { (targetState, context) ->
+            if (targetState == SmtpCredential::class) {
+                val fakeTemplateForAnimation = context.first
+                val fakeFieldsForAnimation = context.second as List<TextFieldItem<*, SmtpCredential>>
+                Column {
+                    fakeFieldsForAnimation.forEach { field ->
+                        field.Content(
+                            emailTemplate.takeIf { it.value.uniqueCredential.credential is SmtpCredential }
+                                .orElse { mutableStateOf(fakeTemplateForAnimation) }
+                                .cast<MutableState<EmailTemplate<SmtpCredential>>>(),
+                            fakeFieldsForAnimation,
+                            viewModel
+                        )
                     }
                 }
             }
         }
+
         MyTextDivider("Destination address settings")
-        destinationAddress.Content(emailTemplate, viewModel)
-        Buttons(schema, emailTemplate, mode)
+        sendTo.Content(emailTemplate, fields, viewModel)
+        Buttons(fields, emailTemplate, mode)
     }
 }
 
@@ -128,13 +124,16 @@ private fun <TEmailCredential : EmailCredential> EditEmailTemplateSettingsFragme
             )
         },
         leadingIcon = {
-            val targetState = when (credential) {
-                GoogleEmailCredential -> credential
-                is SmtpCredential -> KnownSmtpCredential.findBySmtpServer(credential)
-                else -> error("Unknown credential type")
-            }
-            Crossfade(targetState = targetState) {
-                it?.Icon() ?: DefaultEmailIcon()
+            Crossfade(
+                targetState = TargetWithContext(
+                    when (val cred = credential as EmailCredential) {
+                        GoogleEmailCredential -> GoogleEmailCredential
+                        is SmtpCredential -> KnownSmtpCredential.findBySmtpServer(cred) ?: Unit
+                    },
+                    credential
+                )
+            ) { (_, cred) ->
+                cred.Icon()
             }
         },
         trailingIcon = {
@@ -197,7 +196,7 @@ private fun <TEmailCredential : EmailCredential> EditEmailTemplateSettingsFragme
                     }
                     Mode.Add -> {
                         Icon(Icons.Rounded.Add, "")
-                        Text("Add")
+                        Text(mode.string)
                     }
                 }
             }
@@ -211,8 +210,8 @@ class EditEmailTemplateSettingsFragmentViewModel(application: Application) :
     val showErrorIfFieldIsEmpty = mutableLiveDataOf(false)
 }
 
-private enum class Mode {
-    Edit, Add
+private enum class Mode(val string: String) {
+    Edit("Edit"), Add("Add")
 }
 
 fun suggestEmailTemplateLabel(context: Context): String {
@@ -224,12 +223,13 @@ fun suggestEmailTemplateLabel(context: Context): String {
 }
 
 fun suggestEmailTemplate(context: Context): EmailTemplateRaw {
-    return EmailTemplate(
+    return EmailTemplate.new(
         suggestEmailTemplateLabel(context),
         "",
         UniqueEmailCredential.new(
             if (GoogleEmailCredential.isSigned(context).value) GoogleEmailCredential else SmtpCredential.default,
             context
-        )
+        ),
+        context
     )
 }

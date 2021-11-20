@@ -1,7 +1,6 @@
 package bobko.todomail.model
 
 import android.content.Context
-import androidx.activity.ComponentActivity
 import bobko.todomail.login.createEmail
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.intSharedPref
@@ -23,6 +22,8 @@ data class SmtpCredential(
     val password: String,
 ) : EmailCredential() {
     override fun getLabel(context: Context): String = if (username.isEmpty()) "SMTP" else "$username (SMTP)"
+
+    override val email: String get() = username
 
     override suspend fun signOut(context: Context) {
         // Nothing to do
@@ -53,8 +54,8 @@ data class SmtpCredential(
         )
     }
 
-    fun sendEmail(
-        activity: ComponentActivity,
+    override fun sendEmail(
+        context: Context,
         to: String,
         subject: String,
         body: String

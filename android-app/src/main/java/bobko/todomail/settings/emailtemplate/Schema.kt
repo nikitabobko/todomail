@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,10 +17,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import bobko.todomail.R
 import bobko.todomail.model.*
 import bobko.todomail.util.*
@@ -41,20 +45,25 @@ sealed class TextFieldItem<T : Any, TEmailCredential : EmailCredential>(
     @Composable
     open fun Content(
         emailTemplate: MutableState<EmailTemplate<TEmailCredential>>,
+        fields: List<TextFieldItem<*, TEmailCredential>>,
         viewModel: EditEmailTemplateSettingsFragmentViewModel
     ) {
-        CenteredRow {
-            MyTextField(this@TextFieldItem, viewModel, emailTemplate)
+        CenteredRow(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
+            MyTextField(this@TextFieldItem, fields, viewModel, emailTemplate)
         }
     }
 }
 
-class LabelTextFieldItem<TEmailCredential : EmailCredential>(context: Context) : TextFieldItem<String, TEmailCredential>(
+class LabelTextFieldItem<TEmailCredential : EmailCredential>(
+    currentEmailTemplate: EmailTemplate<TEmailCredential>,
+    context: Context
+) : TextFieldItem<String, TEmailCredential>(
     "Label",
     String::class,
     EmailTemplate<TEmailCredential>::label.lens,
 ) {
-    val existingLabels = context.readPref { EmailTemplate.All.read() }
+    private val existingLabels = context.readPref { EmailTemplate.All.read() }
+        .filter { it.id != currentEmailTemplate.id }
         .mapTo(mutableSetOf()) { it.label }
 
     override fun getErrorIfAny(currentText: String): String? {
@@ -66,7 +75,47 @@ class SendToTextFieldItem<TEmailCredential : EmailCredential> : TextFieldItem<St
     "Send to",
     String::class,
     EmailTemplate<TEmailCredential>::sendTo.lens
-)
+) {
+    @OptIn(ExperimentalAnimationApi::class)
+    @Composable
+    override fun Content(
+        emailTemplate: MutableState<EmailTemplate<TEmailCredential>>,
+        fields: List<TextFieldItem<*, TEmailCredential>>,
+        viewModel: EditEmailTemplateSettingsFragmentViewModel
+    ) {
+        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
+            val interactionSource = remember { MutableInteractionSource() }
+            CenteredRow {
+                MyTextField(
+                    this@SendToTextFieldItem,
+                    fields,
+                    viewModel,
+                    emailTemplate,
+                    interactionSource = interactionSource
+                )
+            }
+            val parsedEmail = emailTemplate.value.uniqueCredential.credential.email?.split("@") ?: listOf()
+            DropdownMenu(
+                expanded = interactionSource.collectIsFocusedAsState().value &&
+                        emailTemplate.value.sendTo.isEmpty() &&
+                        parsedEmail.isNotEmpty(),
+                onDismissRequest = { /*TODO*/ },
+                properties = PopupProperties(focusable = false) // Don't hide keyboard
+            ) {
+                parsedEmail.takeIf { it.size == 2 }?.let { (local, domain) ->
+                    val suggestedEmail = "$local+${emailTemplate.value.label.lowercase()}@$domain"
+                    DropdownMenuItem(
+                        onClick = {
+                            emailTemplate.value = emailTemplate.value.copy(sendTo = suggestedEmail)
+                        }
+                    ) {
+                        Text(suggestedEmail)
+                    }
+                }
+            }
+        }
+    }
+}
 
 private val smtpCredentialLens
     get() = EmailTemplate<SmtpCredential>::uniqueCredential.map { it::credential }
@@ -100,16 +149,18 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
     @Composable
     override fun Content(
         emailTemplate: MutableState<EmailTemplate<SmtpCredential>>,
+        credentialFields: List<TextFieldItem<*, SmtpCredential>>,
         viewModel: EditEmailTemplateSettingsFragmentViewModel
     ) {
         val knownSmtpServerPortPair = getKnownSmtpServerPortPair(emailTemplate.value.uniqueCredential.credential)
-        CenteredRow {
-            MyTextField(this@SmtpServerPortTextFieldItem, viewModel, emailTemplate)
+        CenteredRow(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
+            MyTextField(this@SmtpServerPortTextFieldItem, credentialFields, viewModel, emailTemplate)
             AnimatedVisibility(visible = knownSmtpServerPortPair != null) {
                 CenteredRow {
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         // OutlinedTextField has small label at top which makes centering a bit offseted to the bottom
-                        Spacer(modifier = Modifier.size(8.dp))
+                        Spacer(modifier = Modifier.size(OutlinedTextFieldTopPadding))
                         Icon(
                             painterResource(id = R.drawable.verified_icon_24),
                             "",
@@ -117,7 +168,6 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
                             tint = MaterialTheme.colors.primary
                         )
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
                 }
             }
         }
@@ -139,22 +189,24 @@ class PasswordTextFieldItem : TextFieldItem<String, SmtpCredential>(
     @Composable
     override fun Content(
         emailTemplate: MutableState<EmailTemplate<SmtpCredential>>,
+        fields: List<TextFieldItem<*, SmtpCredential>>,
         viewModel: EditEmailTemplateSettingsFragmentViewModel
     ) {
-        Column {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp)) {
             var textFieldVisualTransformation: VisualTransformation by remember {
                 mutableStateOf(PasswordVisualTransformation())
             }
             CenteredRow {
                 MyTextField(
                     this@PasswordTextFieldItem,
+                    fields,
                     viewModel,
                     emailTemplate,
                     visualTransformation = textFieldVisualTransformation
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            CenteredRow(modifier = Modifier.padding(start = 16.dp)) {
+            CenteredRow {
                 val onClick = {
                     textFieldVisualTransformation =
                         if (textFieldVisualTransformation is PasswordVisualTransformation) VisualTransformation.None
@@ -178,12 +230,15 @@ class PasswordTextFieldItem : TextFieldItem<String, SmtpCredential>(
 @Composable
 private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
     item: TextFieldItem<T, TEmailCredential>,
+    fields: List<TextFieldItem<*, TEmailCredential>>,
     viewModel: EditEmailTemplateSettingsFragmentViewModel,
     emailTemplate: MutableState<EmailTemplate<TEmailCredential>>,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val index = fields.indexOf(item).also { check(it != -1) }
 
     val currentText = item.getCurrentText(emailTemplate.value)
     val showErrorIfFieldIsEmpty by viewModel.showErrorIfFieldIsEmpty.observeAsState()
@@ -194,12 +249,12 @@ private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
         label = { Text(error ?: item.label) },
         isError = error != null,
         modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp)
             .weight(1f)
             .focusRequester(focusRequester),
+        interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions(
             keyboardType = item.keyboardType,
-//            imeAction = if (index == viewModel.schema.lastIndex) ImeAction.Done else ImeAction.Next TODO
+            imeAction = if (index == fields.lastIndex) ImeAction.Done else ImeAction.Next
         ),
         // TODO IDE hadn't completed this parameter :( Need to fix in Kotlin plugin
         visualTransformation = visualTransformation,

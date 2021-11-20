@@ -234,8 +234,8 @@ private fun MainActivity.Buttons(
                 todoTextDraft.value = TextFieldValue()
                 try {
                     withContext(Dispatchers.IO) {
-                        EmailManager.sendEmailToMyself(
-                            emailTemplate,
+                        emailTemplate.sendEmail(
+                            context,
                             prevText.lineSequence().first(),
                             prevText.lineSequence().drop(1).joinToString("\n").trim()
                         )

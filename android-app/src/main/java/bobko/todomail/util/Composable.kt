@@ -1,11 +1,17 @@
 package bobko.todomail.util
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+
+/**
+ * Copied from [androidx.compose.material.OutlinedTextFieldTopPadding]
+ */
+val OutlinedTextFieldTopPadding get() = 8.dp
 
 @Composable
 fun Spinner(

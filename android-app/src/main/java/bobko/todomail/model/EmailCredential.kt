@@ -14,33 +14,17 @@ import bobko.todomail.settings.DefaultEmailIcon
 import bobko.todomail.util.PrefReaderDslReceiver
 import bobko.todomail.util.PrefWriterDslReceiver
 
-sealed class EmailCredential : ComposeIconProvider {
+sealed class EmailCredential {
     abstract fun getLabel(context: Context): String
 
-    @Composable
-    final override fun Icon() {
-        when (this) {
-            GoogleEmailCredential -> {
-                Icon(
-                    painterResource(R.drawable.google_logo),
-                    "Google logo",
-                    modifier = Modifier.size(emailIconSize),
-                    tint = Color.Unspecified
-                )
-            }
-            is SmtpCredential -> {
-                KnownSmtpCredential.findBySmtpServer(this)?.Icon() ?: DefaultEmailIcon()
-            }
-            else -> error("")
-        }
-    }
+    abstract val email: String?
 
-//    abstract fun sendEmail(
-//        activity: ComponentActivity,
-//        to: String,
-//        subject: String,
-//        body: String
-//    )
+    abstract fun sendEmail(
+        context: Context,
+        to: String,
+        subject: String,
+        body: String
+    )
 
     abstract suspend fun signOut(context: Context)
 
@@ -68,5 +52,23 @@ sealed class EmailCredential : ComposeIconProvider {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun EmailCredential.Icon() {
+    when (this) {
+        GoogleEmailCredential -> {
+            Icon(
+                painterResource(R.drawable.google_logo),
+                "Google logo",
+                modifier = Modifier.size(emailIconSize),
+                tint = Color.Unspecified
+            )
+        }
+        is SmtpCredential -> {
+            KnownSmtpCredential.findBySmtpServer(this)?.Icon() ?: DefaultEmailIcon()
+        }
+        else -> error("")
     }
 }

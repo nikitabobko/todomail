@@ -12,7 +12,6 @@ import androidx.compose.material.*
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Email
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
@@ -23,16 +22,24 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
 import bobko.todomail.model.*
+import bobko.todomail.settings.emailtemplate.suggestEmailTemplate
 import bobko.todomail.util.*
 
 class MainSettingsFragment : Fragment() {
+    fun parentActivity() = requireActivity() as SettingsActivity
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (requireContext().readPref { EmailTemplate.All.read() }.isEmpty()) {
-            findNavController().navigate(
-                R.id.action_mainSettingsFragment_to_editEmailTemplateSettingsFragment
-            )
+            navigateToEditScreen()
         }
+    }
+
+    fun navigateToEditScreen(emailTemplateToEdit: EmailTemplateRaw? = null) {
+        parentActivity().viewModel.emailTemplateDraft.value = emailTemplateToEdit ?: suggestEmailTemplate(requireContext())
+        findNavController().navigate(
+            R.id.action_mainSettingsFragment_to_editEmailTemplateSettingsFragment
+        )
     }
 
     override fun onCreateView(
@@ -88,39 +95,27 @@ fun calculateIndexOffset(pixelOffset: Int, itemHeight: Int) =
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MainSettingsFragment.TemplatesSection(
-    accountsLiveData: InitializedLiveData<List<EmailTemplateRaw>>
+    emailTemplatesLive: InitializedLiveData<List<EmailTemplateRaw>>
 ) {
-    val accounts by accountsLiveData.observeAsState()
-    var offsets by remember(accounts.size) { mutableStateOf(List(accounts.size) { 0 }) }
-    var itemHeight by remember { mutableStateOf(0) }
-    accounts.forEachIndexed { currentIdx, emailTemplate ->
+    val templates by emailTemplatesLive.observeAsState()
+    var offsets by remember(templates.size) { mutableStateOf(List(templates.size) { 0 }) }
+    val itemHeightDp = 80.dp // TODO rewrite!
+    val itemHeight = with(LocalDensity.current) { itemHeightDp.toPx().toInt() }
+    templates.forEachIndexed { currentIdx, emailTemplate ->
         val offsetLowerBound = -currentIdx * itemHeight
-        val offsetUpperBound = (accounts.lastIndex - currentIdx) * itemHeight
+        val offsetUpperBound = (templates.lastIndex - currentIdx) * itemHeight
         ListItem(
             icon = {
-                val knownCredential = KnownSmtpCredential.values().singleOrNull {
-                    emailTemplate.sendTo.endsWith(it.domain)
-                }
-                if (knownCredential != null) {
-                    knownCredential.Icon()
-                } else {
-                    Icon(
-                        Icons.Rounded.Email,
-                        "Email (SMTP)",
-                        modifier = Modifier.size(emailIconSize)
-                    )
-                }
+                KnownSmtpCredential.values().singleOrNull { emailTemplate.sendTo.endsWith(it.domain) }
+                    ?.Icon()
+                    ?: DefaultEmailIcon()
             },
             modifier = Modifier
                 .offset(y = with(LocalDensity.current) { offsets[currentIdx].toDp() })
-                .clickable {
-                    findNavController().navigate(
-                        R.id.action_mainSettingsFragment_to_editEmailTemplateSettingsFragment
-                    )
-                }
-                .onSizeChanged { if (currentIdx == 0 && itemHeight == 0) itemHeight = it.height },
+                .clickable { navigateToEditScreen(emailTemplate) }
+                .height(itemHeightDp),
             trailing = trailing@{
-                if (accounts.size <= 1) {
+                if (templates.size <= 1) {
                     return@trailing
                 }
                 Icon(
@@ -151,19 +146,19 @@ private fun MainSettingsFragment.TemplatesSection(
                                 itemHeight
                             )
 
-                            val newAccounts = accounts.toMutableList().apply {
+                            val newAccounts = templates.toMutableList().apply {
                                 removeAt(currentIdx)
                                 add(newIdx, emailTemplate)
                             }
 
-                            offsets = List(accounts.size) { 0 }
+                            offsets = List(templates.size) { 0 }
                             requireContext().writePref { EmailTemplate.All.write(newAccounts) }
                         }
                     )
                 )
             },
             text = {
-                Text(text = "${emailTemplate.label} (TO: ${emailTemplate.sendTo})")
+                Text(text = "[${emailTemplate.label}] TO: ${emailTemplate.sendTo}")
             },
             secondaryText = {
                 Text("FROM: ${emailTemplate.uniqueCredential.credential.getLabel(requireContext())}")
@@ -179,9 +174,7 @@ private fun MainSettingsFragment.TemplatesSection(
             )
         },
         modifier = Modifier.clickable {
-            findNavController().navigate(
-                R.id.action_mainSettingsFragment_to_editEmailTemplateSettingsFragment
-            )
+            navigateToEditScreen()
         },
         text = { Text(text = "Add template") }
     )

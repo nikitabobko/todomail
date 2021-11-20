@@ -1,22 +1,45 @@
 package bobko.todomail.model
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import bobko.todomail.pref.*
 import bobko.todomail.util.*
 
 typealias EmailTemplateRaw = EmailTemplate<*>
 
-data class EmailTemplate<out T : EmailCredential>(
+data class EmailTemplate<out T : EmailCredential> private constructor(
+    val id: Int,
     val label: String,
     val sendTo: String,
     val uniqueCredential: UniqueEmailCredential<T>
 ) {
+    companion object {
+        val uniqueEmailTemplateId by intSharedPref(0)
+
+        fun <T : EmailCredential> new(
+            label: String,
+            sendTo: String,
+            uniqueEmailCredential: UniqueEmailCredential<T>,
+            context: Context
+        ): EmailTemplate<T> {
+            val id = context.writePref {
+                uniqueEmailTemplateId.read().also { uniqueEmailTemplateId.write(it + 1) }
+            }
+            return EmailTemplate(id, label, sendTo, uniqueEmailCredential)
+        }
+    }
+
     object All : SharedPref<List<EmailTemplateRaw>>(null) {
         private val uniqueSuffix get() = EmailTemplate::class.simpleName!!
 
         override fun PrefWriterDslReceiver.writeImpl(value: List<EmailTemplateRaw>?) {
+            value?.groupBy { it.id }
+                ?.asSequence()
+                ?.map { (_, uniqueTemplatesWithSameId) -> uniqueTemplatesWithSameId }
+                ?.forEach { check(it.toSet().size == 1) }
             UniqueEmailCredential.All.write(value?.map { it.uniqueCredential })
             ListSharedPref(null, uniqueSuffix) { Pref(it, mapOf()) }.write(value)
+            uniqueEmailTemplateId.write(value?.maxOfOrNull { it.id }?.plus(1) ?: 0)
         }
 
         override fun PrefReaderDslReceiver.read(): List<EmailTemplateRaw> {
@@ -28,11 +51,13 @@ data class EmailTemplate<out T : EmailCredential>(
 
     private class Pref(index: Int, val idToCredential: Map<Int, UniqueEmailCredential<*>>) :
         SharedPref<EmailTemplateRaw>(null) {
+        val emailTemplateId by intSharedPref(0, index.toString())
         val emailTemplateLabel by stringSharedPref("", index.toString())
         val emailTemplateSendTo by stringSharedPref("", index.toString())
         val emailTemplateCredentialId by intSharedPref(0, index.toString())
 
         override fun PrefWriterDslReceiver.writeImpl(value: EmailTemplateRaw?) {
+            emailTemplateId.write(value?.id)
             emailTemplateLabel.write(value?.label)
             emailTemplateSendTo.write(value?.sendTo)
             emailTemplateCredentialId.write(value?.uniqueCredential?.id)
@@ -41,6 +66,7 @@ data class EmailTemplate<out T : EmailCredential>(
         override fun PrefReaderDslReceiver.read(): EmailTemplateRaw {
             val credentialId = emailTemplateCredentialId.read()
             return EmailTemplateRaw(
+                emailTemplateId.read(),
                 emailTemplateLabel.read(),
                 emailTemplateSendTo.read(),
                 idToCredential[credentialId]
@@ -49,7 +75,7 @@ data class EmailTemplate<out T : EmailCredential>(
         }
     }
 
-    fun sendEmail(activity: ComponentActivity, subject: String, body: String) {
-//        uniqueCredential.credential.sendEmail(activity, sendTo, subject, body)
+    fun sendEmail(context: Context, subject: String, body: String) {
+        uniqueCredential.credential.sendEmail(context, sendTo, subject, body)
     }
 }

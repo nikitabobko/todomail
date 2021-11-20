@@ -11,14 +11,23 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.platform.ComposeView
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import java.lang.IllegalStateException
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberFunctions
+
+data class TargetWithContext<T, C>(val target: T, val context: C) {
+    override fun equals(other: Any?): Boolean {
+        val otherTargetState = other?.safeCast<TargetWithContext<*, *>>()?.target ?: return false
+        return target?.equals(otherTargetState) ?: return false
+    }
+
+    override fun hashCode(): Int {
+        return target.hashCode()
+    }
+}
 
 fun Context.getAppLabelByPackageName(packageName: String): String? {
     return try {
@@ -79,7 +88,9 @@ fun <T : Any, V> T.copy(property: KProperty<V>, value: V): T {
     return copyMethod.callBy(mapOf(instanceParam to this, parameterToAmend to value)) as T
 }
 
-inline fun <reified T : Any> Any.cast(): T? = this as? T // TODO remove?
+inline fun <reified T : Any> Any.safeCast(): @kotlin.internal.NoInfer() T? = this as? T
+
+inline fun <reified T : Any> Any.cast(): @kotlin.internal.NoInfer() T = this as T
 
 @Composable
 fun CenteredRow(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
