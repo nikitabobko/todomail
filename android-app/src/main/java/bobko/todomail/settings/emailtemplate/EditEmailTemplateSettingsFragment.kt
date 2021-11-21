@@ -159,7 +159,10 @@ private fun <TEmailCredential : EmailCredential> EditEmailTemplateSettingsFragme
         if (mode == Mode.Edit) {
             OutlinedButton(
                 onClick = {
-                    findNavController().navigateUp() // TODO
+                    requireContext().writePref {
+                        EmailTemplate.All.write(EmailTemplate.All.read().filter { it.id != emailTemplate.value.id })
+                    }
+                    findNavController().navigateUp()
                 },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
