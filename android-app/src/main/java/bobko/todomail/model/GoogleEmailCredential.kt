@@ -98,14 +98,14 @@ data class GoogleEmailCredential(
                         accessToken.refresh_token ?: error("Google API didn't return refresh token"),
                         account.email!!
                     )
-            } finally {
-                suspendCoroutine<Unit> { continuation ->
-                    GoogleSignIn.getClient(context, gso).signOut().addOnCompleteListener {
-                        continuation.resume(Unit)
+                } finally {
+                    suspendCoroutine<Unit> { continuation ->
+                        GoogleSignIn.getClient(context, gso).signOut().addOnCompleteListener {
+                            continuation.resume(Unit)
+                        }
                     }
                 }
             }
-        }
     }
 
     fun tryRefreshOauthToken() = try {
