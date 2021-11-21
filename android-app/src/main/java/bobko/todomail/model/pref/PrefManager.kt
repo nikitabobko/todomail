@@ -11,18 +11,11 @@ object PrefManager {
     val prefillWithClipboardWhenStartedFromLauncher by booleanSharedPref(defaultValue = false)
     val prefillWithClipboardWhenStartedFromTile by booleanSharedPref(defaultValue = doesSupportTiles)
 
-    val closeDialogAfterSendWhenStartedFromLauncher by booleanSharedPref(defaultValue = false)
-    val closeDialogAfterSendWhenStartedFromSharesheet by booleanSharedPref(defaultValue = true)
-    val closeDialogAfterSendWhenStartedFromTile by booleanSharedPref(defaultValue = true)
-
     val todoDraft by stringSharedPref(defaultValue = "")
 
     val all = listOf(
         prefillWithClipboardWhenStartedFromLauncher,
         prefillWithClipboardWhenStartedFromTile,
-        closeDialogAfterSendWhenStartedFromLauncher,
-        closeDialogAfterSendWhenStartedFromSharesheet,
-        closeDialogAfterSendWhenStartedFromTile,
         todoDraft,
         UniqueEmailCredential.uniqueCredentialId,
         EmailTemplate.uniqueEmailTemplateId,

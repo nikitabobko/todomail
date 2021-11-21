@@ -144,6 +144,7 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
     private fun getKnownSmtpServerPortPair(smtpCredential: SmtpCredential): SmtpCredentialType? =
         SmtpCredentialType.findBySmtpServer(smtpCredential)
             .takeIf { smtpCredential.smtpServerPort == it.smtpCredential.smtpServerPort }
+            .takeIf { it != SmtpCredentialType.Generic }
 
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
@@ -155,11 +156,10 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
         val knownSmtpServerPortPair = getKnownSmtpServerPortPair(emailTemplate.value.uniqueCredential.credential)
         CenteredRow(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
             MyTextField(this@SmtpServerPortTextFieldItem, fields, viewModel, emailTemplate)
-            AnimatedVisibility(visible = knownSmtpServerPortPair != SmtpCredentialType.Generic) {
+            AnimatedVisibility(visible = knownSmtpServerPortPair != null) {
                 CenteredRow {
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        // OutlinedTextField has small label at top which makes centering a bit offseted to the bottom
                         Spacer(modifier = Modifier.size(OutlinedTextFieldTopPadding))
                         Icon(
                             painterResource(id = R.drawable.verified_icon_24),

@@ -29,7 +29,7 @@ import bobko.todomail.util.*
 
 class EditEmailTemplateSettingsFragment : Fragment() {
     val viewModel by viewModels<EditEmailTemplateSettingsFragmentViewModel>()
-    fun parentActivity() = requireActivity() as SettingsActivity
+    private fun parentActivity() = requireActivity() as SettingsActivity
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,6 +54,15 @@ class EditEmailTemplateSettingsFragment : Fragment() {
         }
 
         EditEmailTemplateSettingsFragmentScreen(emailTemplate, mode)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (requireContext().readPref { UniqueEmailCredential.All.read() }.isEmpty()) {
+            findNavController().navigate(
+                R.id.action_editEmailTemplateSettingsFragment_to_chooseEmailCredentialTypeDialogFragment
+            )
+        }
     }
 }
 

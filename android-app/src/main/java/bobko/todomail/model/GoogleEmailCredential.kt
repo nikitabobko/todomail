@@ -9,7 +9,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import bobko.todomail.login.createEmail
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.stringSharedPref
-import bobko.todomail.util.*
+import bobko.todomail.util.PrefReaderDslReceiver
+import bobko.todomail.util.PrefWriterDslReceiver
+import bobko.todomail.util.errorException
+import bobko.todomail.util.safeCast
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.isSuccessful
 import com.github.kittinunf.fuel.httpPost
@@ -29,6 +32,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 data class GoogleEmailCredential(
+    private val accountId: String,
     private val googleAccessToken: String,
     private val googleRefreshToken: String,
     override val email: String
@@ -61,35 +65,39 @@ data class GoogleEmailCredential(
             get() = GoogleSignInOptions.Builder()
                 .requestServerAuthCode(serverClientId, /*forceCodeForRefreshToken = */true)
                 .requestScopes(Scope("https://www.googleapis.com/auth/gmail.send"))
+                .requestId()
                 .requestEmail()
                 .build()
 
-        suspend fun signIn(context: Context, launcher: ActivityResultLauncher<Intent>): GoogleEmailCredential? {
-            try {
-                val account = suspendCoroutine<GoogleSignInAccount?> { cont ->
-                    continuation = cont
-                    launcher.launch(GoogleSignIn.getClient(context, gso).signInIntent)
-                }.also { continuation = null } ?: return null
+        suspend fun signIn(context: Context, launcher: ActivityResultLauncher<Intent>): GoogleEmailCredential? =
+            withContext(Dispatchers.Main) {
+                try {
+                    val account = suspendCoroutine<GoogleSignInAccount?> { cont ->
+                        continuation = cont
+                        launcher.launch(GoogleSignIn.getClient(context, gso).signInIntent)
+                    }.also { continuation = null } ?: return@withContext null
 
-                val accessToken = withContext(Dispatchers.IO) {
-                    "https://accounts.google.com/o/oauth2/token"
-                        .httpPost(
-                            parameters = listOf(
-                                "client_id" to serverClientId,
-                                "client_secret" to serverClientSecret,
-                                "grant_type" to "authorization_code",
-                                "code" to account.serverAuthCode!!
+                    val accessToken = withContext(Dispatchers.IO) {
+                        "https://accounts.google.com/o/oauth2/token"
+                            .httpPost(
+                                parameters = listOf(
+                                    "client_id" to serverClientId,
+                                    "client_secret" to serverClientSecret,
+                                    "grant_type" to "authorization_code",
+                                    "code" to account.serverAuthCode!!
+                                )
                             )
-                        )
-                        .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
-                        .value
-                }
+                            .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
+                            .value
+                    }
 
-                return GoogleEmailCredential(
-                    accessToken.access_token,
-                    accessToken.refresh_token ?: error("Google API didn't return refresh token"),
-                    account.email!!
-                )
+
+                    GoogleEmailCredential(
+                        account.id!!,
+                        accessToken.access_token,
+                        accessToken.refresh_token ?: error("Google API didn't return refresh token"),
+                        account.email!!
+                    )
             } finally {
                 suspendCoroutine<Unit> { continuation ->
                     GoogleSignIn.getClient(context, gso).signOut().addOnCompleteListener {
@@ -118,21 +126,24 @@ data class GoogleEmailCredential(
     }
 
     class Pref(index: Int) : SharedPref<GoogleEmailCredential>(null) {
+        private val googleAccountId by stringSharedPref("", index.toString())
         private val googleAccessToken by stringSharedPref("", index.toString())
         private val googleRefreshToken by stringSharedPref("", index.toString())
-        private val email by stringSharedPref("", index.toString())
+        private val googleEmail by stringSharedPref("", index.toString())
 
         override fun PrefWriterDslReceiver.writeImpl(value: GoogleEmailCredential?) {
+            googleAccountId.write(value?.accountId)
             googleAccessToken.write(value?.googleAccessToken)
             googleRefreshToken.write(value?.googleRefreshToken)
-            email.write(value?.email)
+            googleEmail.write(value?.email)
         }
 
         override fun PrefReaderDslReceiver.read(): GoogleEmailCredential {
             return GoogleEmailCredential(
+                googleAccountId.read(),
                 googleAccessToken.read(),
                 googleRefreshToken.read(),
-                email.read()
+                googleEmail.read()
             )
         }
     }
@@ -170,6 +181,9 @@ data class GoogleEmailCredential(
             }
         }
     }
+
+    override fun equals(other: Any?) = accountId == other?.safeCast<GoogleEmailCredential>()?.accountId
+    override fun hashCode() = accountId.hashCode()
 }
 
 data class GoogleOauth2TokenResponse(val access_token: String, val refresh_token: String? = null)

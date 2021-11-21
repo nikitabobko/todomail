@@ -11,7 +11,7 @@ open class ListSharedPref<T : Any>(
     private val size by intSharedPref(0, uniqueSuffix)
 
     final override fun PrefWriterDslReceiver.writeImpl(value: List<T>?) = writeList(this, value)
-    final override fun PrefReaderDslReceiver.read() = readImpl(this)
+    final override fun PrefReaderDslReceiver.read() = readList(this)
 
     // https://youtrack.jetbrains.com/issue/KT-11488
     protected open fun writeList(dslReceiver: PrefWriterDslReceiver, value: List<T>?) = with(dslReceiver) {
@@ -25,7 +25,7 @@ open class ListSharedPref<T : Any>(
     }
 
     // https://youtrack.jetbrains.com/issue/KT-11488
-    protected fun readImpl(receiver: PrefReaderDslReceiver) = with(receiver) {
+    protected open fun readList(receiver: PrefReaderDslReceiver) = with(receiver) {
         (0 until size.read()).map { itemSharedPref(it).read() }
     }
 }

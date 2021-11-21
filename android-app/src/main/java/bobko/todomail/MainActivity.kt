@@ -37,6 +37,7 @@ import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -210,7 +211,6 @@ private fun MainActivity.Buttons(
     sendInProgress: MutableState<Boolean>,
     accountsLive: InitializedLiveData<List<EmailTemplateRaw>>
 ) {
-    val context = this
     val canStartSending = !sendInProgress.value && todoTextDraft.value.text.isNotBlank()
     val unspecifiedOrErrorColor =
         if (isError.value && canStartSending) MaterialTheme.colors.error else Color.Unspecified
@@ -232,48 +232,7 @@ private fun MainActivity.Buttons(
         Spacer(modifier = Modifier.weight(1f))
 
         val onClick = { emailTemplate: EmailTemplateRaw ->
-            scope.launch {
-                val prevText = todoTextDraft.value.text
-                sendInProgress.value = true
-                todoTextDraft.value = TextFieldValue()
-                try {
-                    withContext(Dispatchers.IO) {
-                        try {
-                            emailTemplate.sendEmail(
-                                context,
-                                prevText.lineSequence().first(),
-                                prevText.lineSequence().drop(1).joinToString("\n").trim()
-                            )
-                        } catch (ex: Throwable) {
-                            when (val cred = emailTemplate.uniqueCredential.credential) {
-                                is GoogleEmailCredential -> {
-                                    val newCred = cred.tryRefreshOauthToken()
-                                    if (newCred == null) {
-                                        GoogleEmailCredential.signIn(context, context.signInActivityForResult)
-                                    }
-                                }
-                                is SmtpCredential -> TODO()
-                            }
-                        }
-                    }
-                    isError.value = false
-                    showToast("Successful!")
-                    // We have to garbage collect the credentials at some point. Why not to do it whenever new todo is sent?
-                    writePref { garbageCollectUnreachableCredentials(context) }
-                    val shouldCloseAfterSend =
-                        readPref { viewModel.startedFrom.closeAfterSendPrefKey.read() }
-                    if (shouldCloseAfterSend) {
-                        this@Buttons.finish()
-                    }
-                } catch (ex: Throwable) {
-                    ex.printStackTrace()
-                    todoTextDraft.value = TextFieldValue(prevText)
-                    isError.value = true
-                } finally {
-                    sendInProgress.value = false
-                }
-            }
-            Unit
+            sendButtonClicked(this@Buttons, scope, todoTextDraft, sendInProgress, emailTemplate, isError)
         }
         val minButtonsToStartFolding = 4
         val numOfButtonsToFoldDownTo = 2
@@ -312,5 +271,74 @@ private fun MainActivity.Buttons(
                     Text(it.label, color = unspecifiedOrErrorColor)
                 }
             }
+    }
+}
+
+private fun sendButtonClicked(
+    activity: MainActivity,
+    scope: CoroutineScope,
+    todoTextDraft: MutableState<TextFieldValue>,
+    sendInProgress: MutableState<Boolean>,
+    emailTemplate: EmailTemplateRaw,
+    isError: MutableState<Boolean>
+) {
+    scope.launch {
+        val prevText = todoTextDraft.value.text
+        sendInProgress.value = true
+        todoTextDraft.value = TextFieldValue()
+        try {
+            withContext(Dispatchers.IO) {
+                sendEmailWithCredentialsRefreshAttempt(prevText, emailTemplate, activity)
+            }
+            isError.value = false
+            activity.showToast("Successful!")
+            // We have to garbage collect the credentials at some point. Why not to do it whenever new todo is sent?
+            activity.writePref { garbageCollectUnreachableCredentials(activity) }
+            when (activity.viewModel.startedFrom) {
+                StartedFrom.Launcher -> Unit
+                StartedFrom.Tile -> activity.finish()
+                StartedFrom.Sharesheet -> activity.finish()
+            }
+        } catch (ex: Throwable) {
+            ex.printStackTrace()
+            todoTextDraft.value = TextFieldValue(prevText)
+            isError.value = true
+        } finally {
+            sendInProgress.value = false
+        }
+    }
+}
+
+private suspend fun sendEmailWithCredentialsRefreshAttempt(
+    prevText: String,
+    emailTemplate: EmailTemplateRaw,
+    activity: MainActivity
+) {
+    try {
+        val subject = prevText.lineSequence().first()
+        val body = prevText.lineSequence().drop(1).joinToString("\n").trim()
+        emailTemplate.sendEmail(activity, subject, body)
+    } catch (ex: Throwable) {
+        val unique = emailTemplate.uniqueCredential
+        when (val cred = unique.credential) {
+            is GoogleEmailCredential -> {
+                val newCred = cred.tryRefreshOauthToken()
+                    ?: GoogleEmailCredential.signIn(activity, activity.signInActivityForResult)
+                    ?: errorException(ex)
+                activity.writePref {
+                    UniqueEmailCredential.All.write(
+                        UniqueEmailCredential.All.read().map {
+                            when (it.id) {
+                                unique.id -> unique.copy(credential = newCred)
+                                else -> it
+                            }
+                        }
+                    )
+                }
+            }
+            is SmtpCredential -> {
+                errorException(ex)
+            }
+        }
     }
 }

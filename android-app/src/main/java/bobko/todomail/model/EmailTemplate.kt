@@ -37,10 +37,7 @@ data class EmailTemplate<out T : EmailCredential> private constructor(
         private val uniqueSuffix get() = EmailTemplate::class.simpleName!!
 
         override fun PrefWriterDslReceiver.writeImpl(value: List<EmailTemplateRaw>?) {
-            value?.groupBy { it.id }
-                ?.asSequence()
-                ?.map { (_, uniqueTemplatesWithSameId) -> uniqueTemplatesWithSameId }
-                ?.forEach { check(it.toSet().size == 1) }
+            value?.groupBy { it.id }?.forEach { check(it.value.toSet().size == 1) }
             UniqueEmailCredential.All.write(value?.map { it.uniqueCredential })
             ListSharedPref(null, uniqueSuffix) { Pref(it, mapOf()) }.write(value)
             uniqueEmailTemplateId.write(value?.maxOfOrNull { it.id }?.plus(1) ?: 0)

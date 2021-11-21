@@ -58,13 +58,6 @@ fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveDat
         TemplatesSection(accounts)
 
         Divider()
-        TextDivider("Close the dialog after send when the app is") // TODO remove this setting
-        WhenTheAppIsStartedFromSection(
-            listOf(StartedFrom.Launcher, StartedFrom.Tile, StartedFrom.Sharesheet)
-                .map { it to it.closeAfterSendPrefKey }
-        )
-
-        Divider()
         ListItem(
             modifier = Modifier.clickable {
                 findNavController().navigate(

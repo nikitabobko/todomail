@@ -19,14 +19,8 @@ import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberFunctions
 
 data class TargetWithContext<T, C>(val target: T, val context: C) {
-    override fun equals(other: Any?): Boolean {
-        val otherTargetState = other?.safeCast<TargetWithContext<*, *>>()?.target ?: return false
-        return target?.equals(otherTargetState) ?: return false
-    }
-
-    override fun hashCode(): Int {
-        return target.hashCode()
-    }
+    override fun equals(other: Any?) = target == other?.safeCast<TargetWithContext<*, *>>()?.target
+    override fun hashCode() = target.hashCode()
 }
 
 fun Context.getAppLabelByPackageName(packageName: String): String? {

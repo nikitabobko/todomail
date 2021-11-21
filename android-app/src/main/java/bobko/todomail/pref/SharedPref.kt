@@ -2,7 +2,6 @@ package bobko.todomail.pref
 
 import bobko.todomail.util.*
 import java.lang.ref.WeakReference
-import kotlin.properties.PropertyDelegateProvider
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -10,12 +9,15 @@ abstract class SharedPref<T : Any>(
     private val propertyReceiver: Any?
 ) : ReadOnlyProperty<Any?, SharedPref<T>> {
     fun PrefWriterDslReceiver.write(value: T?) {
-        writeImpl(value)
-        _liveData.get()?.let { it.value = value ?: read() }
+        val normalized = normalize(value)
+        writeImpl(normalized)
+        _liveData.get()?.let { it.value = normalized ?: read() }
     }
 
     abstract fun PrefWriterDslReceiver.writeImpl(value: T?)
     abstract fun PrefReaderDslReceiver.read(): T
+
+    open fun normalize(value: T?) = value
 
     private var _liveData = WeakReference<MutableInitializedLiveData<T>>(null)
 

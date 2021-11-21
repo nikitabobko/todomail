@@ -4,10 +4,7 @@ import android.content.Context
 import bobko.todomail.pref.ListSharedPref
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.intSharedPref
-import bobko.todomail.util.PrefReaderDslReceiver
-import bobko.todomail.util.PrefWriterDslReceiver
-import bobko.todomail.util.readPref
-import bobko.todomail.util.writePref
+import bobko.todomail.util.*
 
 data class UniqueEmailCredential<out T : EmailCredential> private constructor(
     val id: Int,
@@ -16,12 +13,15 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
     companion object {
         val uniqueCredentialId by intSharedPref(0)
 
-        fun <T : EmailCredential> new(emailCredential: T, context: Context): UniqueEmailCredential<T> {
-            val id = context.writePref {
-                uniqueCredentialId.read().also { uniqueCredentialId.write(it + 1) }
-            }
-            return UniqueEmailCredential(id, emailCredential)
-        }
+        fun <T : EmailCredential> new(emailCredential: T, context: Context) =
+            context.readPref { All.read() }.firstOrNull { emailCredential == it.credential }
+                ?.cast<UniqueEmailCredential<T>>()
+                ?: UniqueEmailCredential(
+                    context.writePref {
+                        uniqueCredentialId.read().also { uniqueCredentialId.write(it + 1) }
+                    },
+                    emailCredential
+                )
     }
 
     object All : ListSharedPref<UniqueEmailCredential<*>>(
@@ -30,13 +30,15 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
         ::Pref
     ) {
         override fun writeList(dslReceiver: PrefWriterDslReceiver, value: List<UniqueEmailCredential<*>>?) = with(dslReceiver) {
-            value?.groupBy { it.id }
-                ?.asSequence()
-                ?.map { (_, uniqueCredentialsWithSameId) -> uniqueCredentialsWithSameId.map { it.credential } }
-                ?.forEach { check(it.toSet().size == 1) }
+            require(value?.toSet()?.size == value?.size)
+            value?.groupBy { it.id }?.forEach { check(it.value.toSet().size == 1) }
+            value?.groupBy { it.credential }?.forEach { check(it.value.toSet().size == 1) }
             super.writeList(dslReceiver, value)
             uniqueCredentialId.write(value?.maxOfOrNull { it.id }?.plus(1) ?: 0)
         }
+
+        override fun normalize(value: List<UniqueEmailCredential<*>>?) =
+            value?.toSet()?.toList()
     }
 
     fun isDisposed(context: Context) = context.readPref { All.read() }.none { it.id == this.id }
