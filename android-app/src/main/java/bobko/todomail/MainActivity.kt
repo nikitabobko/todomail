@@ -308,31 +308,50 @@ private suspend fun sendEmailWithTokenRefreshAttempt(
     emailTemplate: EmailTemplateRaw,
     activity: MainActivity
 ) {
+    val subject = prevText.lineSequence().first()
+    val body = prevText.lineSequence().drop(1).joinToString("\n").trim()
     try {
-        val subject = prevText.lineSequence().first()
-        val body = prevText.lineSequence().drop(1).joinToString("\n").trim()
         emailTemplate.sendEmail(activity, subject, body)
     } catch (ex: Throwable) {
-        val unique = emailTemplate.uniqueCredential
-        when (val cred = unique.credential) {
+        val invalidUniqCred = emailTemplate.uniqueCredential
+        when (val invalidCred = invalidUniqCred.credential) {
             is GoogleEmailCredential -> {
-                val newCred = cred.tryRefreshOauthToken()
+                val newCred = invalidCred.tryRefreshOauthToken()
                     ?: GoogleEmailCredential.signIn(activity, activity.signInActivityForResult)
                     ?: errorException(ex)
-                activity.writePref {
-                    UniqueEmailCredential.All.write(
-                        UniqueEmailCredential.All.read().map {
-                            when (it.id) {
-                                unique.id -> unique.copy(credential = newCred)
-                                else -> it
-                            }
-                        }
-                    )
-                }
+                replaceCredential(emailTemplate, newCred, activity).sendEmail(activity, subject, body)
             }
             is SmtpCredential -> {
                 errorException(ex)
             }
         }
     }
+}
+
+private fun replaceCredential(
+    invalidTemplate: EmailTemplateRaw,
+    newCred: EmailCredential,
+    context: Context
+): EmailTemplate<EmailCredential> {
+    val invalidUniqCred = invalidTemplate.uniqueCredential
+    val newTemplate = invalidTemplate.switchCredential(
+        UniqueEmailCredential.new(newCred, context),
+        context
+    )
+    context.writePref {
+        val newTemplates = EmailTemplate.All.read().map { template ->
+            when (template.id) {
+                invalidTemplate.id -> newTemplate
+                else -> when (template.uniqueCredential.id) {
+                    invalidUniqCred.id -> template.switchCredential(
+                        newTemplate.uniqueCredential,
+                        context
+                    )
+                    else -> template
+                }
+            }
+        }
+        EmailTemplate.All.write(newTemplates)
+    }
+    return newTemplate
 }

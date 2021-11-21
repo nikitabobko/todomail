@@ -191,11 +191,11 @@ private val <T : Any> ResponseResultOf<T>.value: T
         val (request, response, result) = this
         if (!response.isSuccessful) {
             error(
-                """
-                    Request failed with ${response.statusCode}
-                    request=$request
-                    response=$response
-                """.trimIndent()
+                "Request failed with ${response.statusCode}\n" +
+                        "----- REQUEST:\n" +
+                        request +
+                        "----- RESPONSE:\n" +
+                        response
             )
         }
         return when (result) {
