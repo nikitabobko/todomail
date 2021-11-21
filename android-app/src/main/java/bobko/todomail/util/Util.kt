@@ -86,9 +86,4 @@ inline fun <reified T : Any> Any.safeCast(): @kotlin.internal.NoInfer() T? = thi
 
 inline fun <reified T : Any> Any.cast(): @kotlin.internal.NoInfer() T = this as T
 
-@Composable
-fun CenteredRow(modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically, content = content)
-}
-
 fun errorException(throwable: Throwable): Nothing = throw IllegalStateException(throwable)
