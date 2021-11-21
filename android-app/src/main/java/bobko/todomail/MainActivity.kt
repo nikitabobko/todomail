@@ -300,7 +300,7 @@ private fun sendButtonClicked(
                 StartedFrom.Sharesheet -> activity.finish()
             }
         } catch (ex: Throwable) {
-            ex.printStackTrace()
+            ex.printStackTrace() // TODO
             todoTextDraft.value = TextFieldValue(prevText)
             isError.value = true
         } finally {
