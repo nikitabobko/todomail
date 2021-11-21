@@ -109,7 +109,7 @@ data class GoogleEmailCredential(
     }
 
     fun tryRefreshOauthToken() = try {
-        val response = "https://oauth2.googleapis.com/token"
+        val response = "https://accounts.google.com/o/oauth2/token"
             .httpPost(
                 parameters = listOf(
                     "client_id" to serverClientId,
