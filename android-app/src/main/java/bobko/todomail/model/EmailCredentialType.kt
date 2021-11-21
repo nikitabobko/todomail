@@ -3,6 +3,7 @@ package bobko.todomail.model
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -10,22 +11,35 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import bobko.todomail.R
 
-enum class KnownSmtpCredential(
+sealed interface EmailCredentialType<TEmailCredential : EmailCredential> {
+    @Composable
+    fun Icon()
+}
+
+object GoogleCredentialType : EmailCredentialType<GoogleEmailCredential> {
+    @Composable
+    override fun Icon() {
+        Icon(
+            painterResource(R.drawable.google_logo),
+            "Google logo",
+            modifier = Modifier.size(emailIconSize),
+            tint = Color.Unspecified
+        )
+    }
+}
+
+enum class SmtpCredentialType(
     val label: String,
     @DrawableRes val iconResId: Int,
     val smtpCredential: SmtpCredential,
-    val domain: String,
-) {
+    val domain: String?,
+) : EmailCredentialType<SmtpCredential> {
     Gmail(
         "Gmail (SMTP)",
         R.drawable.ic_gmail_icon,
         SmtpCredential("smtp.gmail.com", 587, username = "", password = ""),
         domain = "gmail.com"
-    ) {
-        override fun suggestEmailSuffix(currentLabel: String): String {
-            return "+${currentLabel.lowercase()}@gmail.com"
-        }
-    },
+    ),
     Outlook(
         "Outlook (SMTP)",
         R.drawable.outlook_icon,
@@ -37,23 +51,27 @@ enum class KnownSmtpCredential(
         R.drawable.yahoo_mail,
         SmtpCredential("smtp.mail.yahoo.com", 465, username = "", password = ""),
         domain = "yahoo.com",
+    ),
+    Generic(
+        "Email (SMTP)",
+        R.drawable.email_icon_24,
+        SmtpCredential.default,
+        domain = null
     );
 
     @Composable
-    fun Icon() {
+    override fun Icon() {
         Icon(
             painterResource(id = iconResId),
             contentDescription = label,
             modifier = Modifier.size(emailIconSize),
-            tint = Color.Unspecified
+            tint = if (this == Generic) LocalContentColor.current else Color.Unspecified
         )
     }
 
-    open fun suggestEmailSuffix(currentLabel: String) = "@$domain"
-
     companion object {
         fun findBySmtpServer(smtpCredential: SmtpCredential) =
-            values().singleOrNull { it.smtpCredential.smtpServer == smtpCredential.smtpServer }
+            values().singleOrNull { it.smtpCredential.smtpServer == smtpCredential.smtpServer } ?: Generic
     }
 }
 

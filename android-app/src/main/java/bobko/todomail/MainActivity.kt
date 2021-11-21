@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,9 +43,12 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     val viewModel by viewModels<MainActivityViewModel>()
+    lateinit var signInActivityForResult: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        signInActivityForResult = GoogleEmailCredential.registerActivityForResult(this)
 
         // Some magic to show keyboard on Activity start. It
         // depends on the device whether this call is required!
@@ -234,11 +238,23 @@ private fun MainActivity.Buttons(
                 todoTextDraft.value = TextFieldValue()
                 try {
                     withContext(Dispatchers.IO) {
-                        emailTemplate.sendEmail(
-                            context,
-                            prevText.lineSequence().first(),
-                            prevText.lineSequence().drop(1).joinToString("\n").trim()
-                        )
+                        try {
+                            emailTemplate.sendEmail(
+                                context,
+                                prevText.lineSequence().first(),
+                                prevText.lineSequence().drop(1).joinToString("\n").trim()
+                            )
+                        } catch (ex: Throwable) {
+                            when (val cred = emailTemplate.uniqueCredential.credential) {
+                                is GoogleEmailCredential -> {
+                                    val newCred = cred.tryRefreshOauthToken()
+                                    if (newCred == null) {
+                                        GoogleEmailCredential.signIn(context, context.signInActivityForResult)
+                                    }
+                                }
+                                is SmtpCredential -> TODO()
+                            }
+                        }
                     }
                     isError.value = false
                     showToast("Successful!")

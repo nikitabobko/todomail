@@ -141,21 +141,21 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
         }
     }
 
-    private fun getKnownSmtpServerPortPair(smtpCredential: SmtpCredential): KnownSmtpCredential? =
-        KnownSmtpCredential.findBySmtpServer(smtpCredential)
-            ?.takeIf { smtpCredential.smtpServerPort == it.smtpCredential.smtpServerPort }
+    private fun getKnownSmtpServerPortPair(smtpCredential: SmtpCredential): SmtpCredentialType? =
+        SmtpCredentialType.findBySmtpServer(smtpCredential)
+            .takeIf { smtpCredential.smtpServerPort == it.smtpCredential.smtpServerPort }
 
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
     override fun Content(
         emailTemplate: MutableState<EmailTemplate<SmtpCredential>>,
-        credentialFields: List<TextFieldItem<*, SmtpCredential>>,
+        fields: List<TextFieldItem<*, SmtpCredential>>,
         viewModel: EditEmailTemplateSettingsFragmentViewModel
     ) {
         val knownSmtpServerPortPair = getKnownSmtpServerPortPair(emailTemplate.value.uniqueCredential.credential)
         CenteredRow(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
-            MyTextField(this@SmtpServerPortTextFieldItem, credentialFields, viewModel, emailTemplate)
-            AnimatedVisibility(visible = knownSmtpServerPortPair != null) {
+            MyTextField(this@SmtpServerPortTextFieldItem, fields, viewModel, emailTemplate)
+            AnimatedVisibility(visible = knownSmtpServerPortPair != SmtpCredentialType.Generic) {
                 CenteredRow {
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {

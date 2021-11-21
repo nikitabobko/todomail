@@ -6,6 +6,7 @@ import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.intSharedPref
 import bobko.todomail.util.PrefReaderDslReceiver
 import bobko.todomail.util.PrefWriterDslReceiver
+import bobko.todomail.util.readPref
 import bobko.todomail.util.writePref
 
 data class UniqueEmailCredential<out T : EmailCredential> private constructor(
@@ -37,6 +38,8 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
             uniqueCredentialId.write(value?.maxOfOrNull { it.id }?.plus(1) ?: 0)
         }
     }
+
+    fun isDisposed(context: Context) = context.readPref { All.read() }.none { it.id == this.id }
 
     private class Pref(val index: Int) : SharedPref<UniqueEmailCredential<*>>(null) {
         private val credentialId by intSharedPref(0, index.toString())

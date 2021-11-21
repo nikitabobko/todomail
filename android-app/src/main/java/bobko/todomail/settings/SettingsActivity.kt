@@ -5,22 +5,11 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
-import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.size
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.AndroidViewModel
 import bobko.todomail.R
-import bobko.todomail.model.EmailTemplateRaw
+import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.GoogleEmailCredential
-import bobko.todomail.model.SmtpCredential
-import bobko.todomail.model.UniqueEmailCredential
-import bobko.todomail.settings.emailtemplate.suggestEmailTemplate
-import bobko.todomail.settings.emailtemplate.suggestEmailTemplateLabel
 import bobko.todomail.util.mutableLiveDataOf
 
 class SettingsActivity : AppCompatActivity() {

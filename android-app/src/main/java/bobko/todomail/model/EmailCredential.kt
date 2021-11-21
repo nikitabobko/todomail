@@ -1,23 +1,15 @@
 package bobko.todomail.model
 
 import android.content.Context
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import bobko.todomail.R
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.stringSharedPref
-import bobko.todomail.settings.DefaultEmailIcon
 import bobko.todomail.util.PrefReaderDslReceiver
 import bobko.todomail.util.PrefWriterDslReceiver
 
 sealed class EmailCredential {
-    abstract fun getLabel(context: Context): String
-
-    abstract val email: String?
+    abstract val label: String
+    abstract val email: String
+    abstract val isEmpty: Boolean
 
     abstract fun sendEmail(
         context: Context,
@@ -33,15 +25,16 @@ sealed class EmailCredential {
 
         override fun PrefReaderDslReceiver.read() =
             when (val type = emailCredentialType.read()) {
-                "google" -> GoogleEmailCredential
+                "google" -> GoogleEmailCredential.Pref(index).read()
                 "smtp" -> SmtpCredential.Pref(index).read()
                 else -> error("Unknown type: $type")
             }
 
         override fun PrefWriterDslReceiver.writeImpl(value: EmailCredential?) {
             return when (value) {
-                GoogleEmailCredential -> {
+                is GoogleEmailCredential -> {
                     emailCredentialType.write("google")
+                    GoogleEmailCredential.Pref(index).write(value)
                 }
                 is SmtpCredential -> {
                     emailCredentialType.write("smtp")
@@ -55,20 +48,8 @@ sealed class EmailCredential {
     }
 }
 
-@Composable
-fun EmailCredential.Icon() {
-    when (this) {
-        GoogleEmailCredential -> {
-            Icon(
-                painterResource(R.drawable.google_logo),
-                "Google logo",
-                modifier = Modifier.size(emailIconSize),
-                tint = Color.Unspecified
-            )
-        }
-        is SmtpCredential -> {
-            KnownSmtpCredential.findBySmtpServer(this)?.Icon() ?: DefaultEmailIcon()
-        }
-        else -> error("")
+val <T : EmailCredential> T.type: EmailCredentialType<T>
+    get() = when (val cred = this as EmailCredential) {
+        is GoogleEmailCredential -> GoogleCredentialType as EmailCredentialType<T>
+        is SmtpCredential -> SmtpCredentialType.findBySmtpServer(cred) as EmailCredentialType<T>
     }
-}

@@ -14,15 +14,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
+import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.*
-import bobko.todomail.settings.emailtemplate.suggestEmailTemplate
 import bobko.todomail.util.*
 
 class MainSettingsFragment : Fragment() {
@@ -106,9 +105,10 @@ private fun MainSettingsFragment.TemplatesSection(
         val offsetUpperBound = (templates.lastIndex - currentIdx) * itemHeight
         ListItem(
             icon = {
-                KnownSmtpCredential.values().singleOrNull { emailTemplate.sendTo.endsWith(it.domain) }
-                    ?.Icon()
-                    ?: DefaultEmailIcon()
+                SmtpCredentialType.values() // TODO icon by domain, hmm. Is it okay logic?
+                    .singleOrNull { emailTemplate.sendTo.endsWith(it.domain ?: return@singleOrNull false) }
+                    .orElse { SmtpCredentialType.Generic }
+                    .Icon()
             },
             modifier = Modifier
                 .offset(y = with(LocalDensity.current) { offsets[currentIdx].toDp() })
@@ -161,7 +161,7 @@ private fun MainSettingsFragment.TemplatesSection(
                 Text(text = "[${emailTemplate.label}] TO: ${emailTemplate.sendTo}")
             },
             secondaryText = {
-                Text("FROM: ${emailTemplate.uniqueCredential.credential.getLabel(requireContext())}")
+                Text("FROM: ${emailTemplate.uniqueCredential.credential.label}")
             }
         )
     }

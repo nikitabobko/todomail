@@ -42,11 +42,3 @@ fun intSharedPref(defaultValue: Int, keySuffix: String? = null) =
 
 fun booleanSharedPref(defaultValue: Boolean, keySuffix: String? = null) =
     stringBasedSharedPref(defaultValue, Boolean::toString, String::toBooleanStrict, keySuffix)
-
-inline fun <reified T : Enum<T>> enumSharedPref(defaultValue: T, keySuffix: String? = null) =
-    stringBasedSharedPref(
-        defaultValue,
-        { it.toString() },
-        { T::class.java.getDeclaredMethod("valueOf", String::class.java).invoke(null, it) as T },
-        keySuffix,
-    ).also { require(T::class.java.isEnum) }

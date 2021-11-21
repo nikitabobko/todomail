@@ -1,9 +1,13 @@
 package bobko.todomail.model
 
 import android.content.Context
-import androidx.activity.ComponentActivity
-import bobko.todomail.pref.*
-import bobko.todomail.util.*
+import bobko.todomail.pref.ListSharedPref
+import bobko.todomail.pref.SharedPref
+import bobko.todomail.pref.intSharedPref
+import bobko.todomail.pref.stringSharedPref
+import bobko.todomail.util.PrefReaderDslReceiver
+import bobko.todomail.util.PrefWriterDslReceiver
+import bobko.todomail.util.writePref
 
 typealias EmailTemplateRaw = EmailTemplate<*>
 
@@ -74,6 +78,14 @@ data class EmailTemplate<out T : EmailCredential> private constructor(
             )
         }
     }
+
+    fun <T : EmailCredential> switchCredential(uniqueCredential: UniqueEmailCredential<T>, context: Context) =
+        EmailTemplate.new(
+            label,
+            sendTo,
+            uniqueCredential,
+            context
+        )
 
     fun sendEmail(context: Context, subject: String, body: String) {
         uniqueCredential.credential.sendEmail(context, sendTo, subject, body)

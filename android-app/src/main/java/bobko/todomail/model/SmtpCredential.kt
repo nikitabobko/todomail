@@ -13,16 +13,14 @@ import javax.mail.PasswordAuthentication
 import javax.mail.Session
 import javax.mail.Transport
 
-private const val DEFAULT_SMTP_PORT = 25
-
 data class SmtpCredential(
     val smtpServer: String,
     val smtpServerPort: Int,
     val username: String,
     val password: String,
 ) : EmailCredential() {
-    override fun getLabel(context: Context): String = if (username.isEmpty()) "SMTP" else "$username (SMTP)"
-
+    override val label: String get() = if (isEmpty) "SMTP" else "$username (SMTP)"
+    override val isEmpty get() = username.isEmpty()
     override val email: String get() = username
 
     override suspend fun signOut(context: Context) {
@@ -30,6 +28,7 @@ data class SmtpCredential(
     }
 
     companion object {
+        private const val DEFAULT_SMTP_PORT = 25
         val default get() = SmtpCredential("", DEFAULT_SMTP_PORT, "", "")
     }
 
