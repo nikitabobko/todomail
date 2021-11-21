@@ -53,12 +53,7 @@ data class SmtpCredential(
         )
     }
 
-    override fun sendEmail(
-        context: Context,
-        to: String,
-        subject: String,
-        body: String
-    ) {
+    override fun sendEmail(context: Context, to: String, subject: String, body: String) {
         val prop = Properties().apply {
             this["mail.smtp.host"] = smtpServer
             this["mail.smtp.port"] = smtpServerPort

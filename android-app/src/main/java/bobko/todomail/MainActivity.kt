@@ -38,9 +38,7 @@ import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     val viewModel by viewModels<MainActivityViewModel>()
@@ -287,9 +285,7 @@ private fun sendButtonClicked(
         sendInProgress.value = true
         todoTextDraft.value = TextFieldValue()
         try {
-            withContext(Dispatchers.IO) {
-                sendEmailWithCredentialsRefreshAttempt(prevText, emailTemplate, activity)
-            }
+            sendEmailWithTokenRefreshAttempt(prevText, emailTemplate, activity)
             isError.value = false
             activity.showToast("Successful!")
             // We have to garbage collect the credentials at some point. Why not to do it whenever new todo is sent?
@@ -309,7 +305,7 @@ private fun sendButtonClicked(
     }
 }
 
-private suspend fun sendEmailWithCredentialsRefreshAttempt(
+private suspend fun sendEmailWithTokenRefreshAttempt(
     prevText: String,
     emailTemplate: EmailTemplateRaw,
     activity: MainActivity
