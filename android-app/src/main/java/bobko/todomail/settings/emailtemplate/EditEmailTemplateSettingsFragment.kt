@@ -99,7 +99,8 @@ private fun <TEmailCredential : EmailCredential> EditEmailTemplateSettingsFragme
             targetState = TargetWithContext(
                 emailTemplate.value.uniqueCredential.credential::class,
                 emailTemplate.value to allFields
-            )
+            ),
+            transitionSpec = { expandVertically() with shrinkVertically() }
         ) { (targetState, context) ->
             if (targetState == SmtpCredential::class) {
                 val fakeTemplateForAnimation = context.first
