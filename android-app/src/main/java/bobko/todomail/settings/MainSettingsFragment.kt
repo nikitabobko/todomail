@@ -22,6 +22,7 @@ import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
 import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.*
+import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.util.*
 
 class MainSettingsFragment : Fragment() {
@@ -58,15 +59,14 @@ fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveDat
         TemplatesSection(accounts)
 
         Divider()
-        ListItem(
-            modifier = Modifier.clickable {
-                findNavController().navigate(
-                    R.id.action_mainSettingsFragment_to_textPrefillSettingsFragment
-                )
-            }
-        ) {
-            Text("Text prefill settings")
-        }
+        TextDivider("Prefill with clipboard when the app is")
+        WhenTheAppIsStartedFromSection(listOf(
+            StartedFrom.Launcher.let { it to it.prefillPrefKey!! },
+            StartedFrom.Tile.let { it to it.prefillPrefKey!! }
+        ))
+
+        Divider()
+        OtherSettingsSection()
 
         OutlinedButton(
             onClick = { /*TODO*/ }, modifier = Modifier
@@ -76,6 +76,21 @@ fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveDat
             Text("Reset settings to default")
         }
     }
+}
+
+@Composable
+private fun MainSettingsFragment.OtherSettingsSection() {
+    val append by LastUsedAppFeatureManager.isFeatureEnabled(requireContext())
+        .observeAsState()
+    SwitchOrCheckBoxItem(
+        "Append app name that shared the text or clipboard",
+        checked = append,
+        onChecked = {
+            this.requireContext().writePref {
+//                PrefManager.appendAppNameThatSharedTheText.value = !append TODO
+            }
+        }
+    )
 }
 
 /**
