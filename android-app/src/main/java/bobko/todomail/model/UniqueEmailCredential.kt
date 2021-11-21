@@ -55,10 +55,3 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
             UniqueEmailCredential(credentialId.read(), EmailCredential.Pref(index).read())
     }
 }
-
-suspend fun PrefWriterDslReceiver.garbageCollectUnreachableCredentials(context: Context) {
-    val reachableIds = EmailTemplate.All.read().mapTo(mutableSetOf()) { it.uniqueCredential.id }
-    val (reachable, unreachable) = UniqueEmailCredential.All.read().partition { it.id in reachableIds }
-    unreachable.forEach { it.credential.signOut(context) }
-    UniqueEmailCredential.All.write(reachable)
-}

@@ -18,8 +18,6 @@ sealed class EmailCredential {
         body: String
     )
 
-    abstract suspend fun signOut(context: Context)
-
     class Pref(private val index: Int) : SharedPref<EmailCredential>(null) {
         private val emailCredentialType by stringSharedPref("", index.toString())
 

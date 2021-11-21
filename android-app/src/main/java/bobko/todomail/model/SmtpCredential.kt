@@ -23,10 +23,6 @@ data class SmtpCredential(
     override val isEmpty get() = username.isEmpty()
     override val email: String get() = username
 
-    override suspend fun signOut(context: Context) {
-        // Nothing to do
-    }
-
     companion object {
         private const val DEFAULT_SMTP_PORT = 25
         val default get() = SmtpCredential("", DEFAULT_SMTP_PORT, "", "")

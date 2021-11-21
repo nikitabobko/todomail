@@ -9,8 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.AndroidViewModel
 import bobko.todomail.R
 import bobko.todomail.credential.suggestEmailTemplate
+import bobko.todomail.model.EmailTemplate
 import bobko.todomail.model.GoogleEmailCredential
+import bobko.todomail.util.PrefWriterDslReceiver
 import bobko.todomail.util.mutableLiveDataOf
+import bobko.todomail.util.writePref
 
 class SettingsActivity : AppCompatActivity() {
     val viewModel: SettingsActivityViewModel by viewModels()
@@ -20,6 +23,15 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         signInActivityForResult = GoogleEmailCredential.registerActivityForResult(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        writePref { garbageCollectUnreachableCredentials() }
+    }
+
+    private fun PrefWriterDslReceiver.garbageCollectUnreachableCredentials() {
+        EmailTemplate.All.write(EmailTemplate.All.read())
     }
 }
 

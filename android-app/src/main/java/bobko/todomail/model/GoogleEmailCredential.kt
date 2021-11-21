@@ -174,14 +174,6 @@ data class GoogleEmailCredential(
 
     override val label: String get() = "Google ($email)"
 
-    override suspend fun signOut(context: Context) {
-        suspendCoroutine<Unit> { continuation ->
-            GoogleSignIn.getClient(context, gso).signOut().addOnCompleteListener {
-                continuation.resume(Unit)
-            }
-        }
-    }
-
     override fun equals(other: Any?) = accountId == other?.safeCast<GoogleEmailCredential>()?.accountId
     override fun hashCode() = accountId.hashCode()
 }

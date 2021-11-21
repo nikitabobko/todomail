@@ -288,8 +288,6 @@ private fun sendButtonClicked(
             sendEmailWithTokenRefreshAttempt(prevText, emailTemplate, activity)
             isError.value = false
             activity.showToast("Successful!")
-            // We have to garbage collect the credentials at some point. Why not to do it whenever new todo is sent?
-            activity.writePref { garbageCollectUnreachableCredentials(activity) }
             when (activity.viewModel.startedFrom) {
                 StartedFrom.Launcher -> Unit
                 StartedFrom.Tile -> activity.finish()
