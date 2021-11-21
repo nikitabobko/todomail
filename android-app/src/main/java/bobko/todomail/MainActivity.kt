@@ -250,6 +250,7 @@ private fun MainActivity.Buttons(
                         this@Buttons.finish()
                     }
                 } catch (ex: Throwable) {
+                    ex.printStackTrace()
                     todoTextDraft.value = TextFieldValue(prevText)
                     isError.value = true
                 } finally {

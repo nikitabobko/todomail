@@ -6,14 +6,8 @@ import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import bobko.todomail.R
 import bobko.todomail.login.createEmail
+import bobko.todomail.pref.stringSharedPref
 import bobko.todomail.util.*
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.isSuccessful
@@ -26,9 +20,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import java.util.concurrent.ThreadLocalRandom
 import javax.mail.internet.MimeMessage
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -49,36 +43,43 @@ object GoogleEmailCredential : EmailCredential() {
         subject: String,
         body: String
     ) {
-        val account = getSignedAccount(context) ?: error("User isn't signed it")
-
-        val accessToken = "https://accounts.google.com/o/oauth2/token"
-            .httpPost(
-                parameters = listOf(
-                    "client_id" to serverClientId,
-                    "client_secret" to serverClientSecret,
-                    "grant_type" to "authorization_code",
-                    "code" to account.serverAuthCode!!
-                )
-            )
-            .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
-            .value
-            .access_token
-
         val raw = createEmail(to, subject, body).encodeToBase64()
 
-        "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
-            .httpPost()
-            .header(
-                "Authorization" to "Bearer $accessToken",
-                "Accept" to "application/json",
-                "Content-Type" to "application/json"
-            )
-            .objectBody(GmailMessageSendRequest(raw))
-            .responseString()
-            .value
-    }
+        fun sendEmailViaGmailRestApi() {
+            val accessToken = context.readPref {
+                googleAccessToken.read()
+            }
+            "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+                .httpPost()
+                .header(
+                    "Authorization" to "Bearer $accessToken",
+                    "Accept" to "application/json",
+                    "Content-Type" to "application/json"
+                )
+                .objectBody(GmailMessageSendRequest(raw))
+                .responseString()
+                .value
+        }
 
-    class SignInActivityForResult(val launcher: ActivityResultLauncher<Intent>, val deferred: Deferred<GoogleSignInAccount?>)
+        try {
+            sendEmailViaGmailRestApi()
+        } catch (ex: Throwable) {
+            // Try to refresh access token
+            val response = "https://oauth2.googleapis.com/token"
+                .httpPost(
+                    parameters = listOf(
+                        "client_id" to serverClientId,
+                        "client_secret" to serverClientSecret,
+                        "grant_type" to "refresh_token",
+                        "refresh_token" to context.readPref { googleRefreshToken.read() }
+                    )
+                )
+                .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
+                .value
+            context.writePref { googleAccessToken.write(response.access_token) }
+            sendEmailViaGmailRestApi()
+        }
+    }
 
     fun registerActivityForResult(activity: ComponentActivity): ActivityResultLauncher<Intent> {
         return activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { activityResult ->
@@ -97,22 +98,52 @@ object GoogleEmailCredential : EmailCredential() {
     }
 
     private val gso
-        get() = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .setLogSessionId(ThreadLocalRandom.current().nextInt().toString())
-            .requestServerAuthCode(serverClientId)
+        get() = GoogleSignInOptions.Builder()
+            .requestServerAuthCode(serverClientId, /*forceCodeForRefreshToken = */true)
             .requestScopes(Scope("https://www.googleapis.com/auth/gmail.send"))
             .requestEmail()
             .build()
 
     private var continuation: Continuation<GoogleSignInAccount?>? = null // TODO It looks hacky. actor pattern? channel?
 
+    private val googleAccessToken by stringSharedPref("")
+    private val googleRefreshToken by stringSharedPref("")
+
     suspend fun signIn(context: Context, launcher: ActivityResultLauncher<Intent>): GoogleSignInAccount? {
+        val account = suspendCoroutine<GoogleSignInAccount?> { continuation ->
+            this.continuation = continuation
+            launcher.launch(GoogleSignIn.getClient(context, gso).signInIntent)
+        }.also { continuation = null } ?: return null
+
+        val accessToken = withContext(Dispatchers.IO) {
+            "https://accounts.google.com/o/oauth2/token"
+                .httpPost(
+                    parameters = listOf(
+                        "client_id" to serverClientId,
+                        "client_secret" to serverClientSecret,
+                        "grant_type" to "authorization_code",
+                        "code" to account.serverAuthCode!!
+                    )
+                )
+                .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
+                .value
+        }
+
+
+        context.writePref {
+            googleAccessToken.write(accessToken.access_token)
+            googleRefreshToken.write(accessToken.refresh_token)
+        }
+
+        suspendCoroutine<Unit> { continuation ->
+            GoogleSignIn.getClient(context, gso).signOut().addOnCompleteListener {
+                continuation.resume(Unit)
+            }
+        }
+
         return updateSignInStatus(
             context,
-            suspendCoroutine<GoogleSignInAccount?> { continuation ->
-                this.continuation = continuation
-                launcher.launch(GoogleSignIn.getClient(context, gso).signInIntent)
-            }.also { continuation = null }
+            account
         )
     }
 
@@ -164,8 +195,8 @@ object GoogleEmailCredential : EmailCredential() {
     }
 }
 
-private data class GoogleOauth2TokenResponse(val access_token: String)
-private data class GmailMessageSendRequest(val raw: String)
+data class GoogleOauth2TokenResponse(val access_token: String, val refresh_token: String? = null)
+data class GmailMessageSendRequest(val raw: String)
 
 private fun MimeMessage.encodeToBase64() = ByteArrayOutputStream().use {
     writeTo(it)
