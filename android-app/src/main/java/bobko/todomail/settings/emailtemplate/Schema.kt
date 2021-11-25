@@ -40,8 +40,6 @@ sealed class TextFieldItem<T : Any, TEmailCredential : EmailCredential>(
     val lens: Lens<EmailTemplate<TEmailCredential>, T>,
     val keyboardType: KeyboardType = KeyboardType.Text
 ) {
-    var manuallyEditedAtLeastOnce: Boolean = false
-
     fun getCurrentText(emailTemplate: EmailTemplate<TEmailCredential>): String {
         return lens.get(emailTemplate).takeIf { it != -1 }?.toString() ?: ""
     }
@@ -295,7 +293,6 @@ private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
             }
         ),
         onValueChange = { newValueRaw ->
-            item.manuallyEditedAtLeastOnce = true
             val newValue = when (item.clazz) {
                 // FYI https://issuetracker.google.com/issues/204522152
                 Int::class -> if (newValueRaw.isEmpty()) -1 else newValueRaw.toIntOrNull()
@@ -305,7 +302,6 @@ private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
             newValue?.let {
                 emailTemplate.value = item.lens.set(emailTemplate.value, it)
             }
-            // TODO implement automatic port completion for known smtp servers
         },
     )
 }
