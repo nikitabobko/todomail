@@ -80,7 +80,8 @@ class LabelTextFieldItem<TEmailCredential : EmailCredential>(
 class SendToTextFieldItem<TEmailCredential : EmailCredential> : TextFieldItem<String, TEmailCredential>(
     "Send to",
     String::class,
-    EmailTemplate<TEmailCredential>::sendTo.lens
+    EmailTemplate<TEmailCredential>::sendTo.lens,
+    keyboardType = KeyboardType.Email,
 ) {
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
@@ -203,7 +204,8 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
 class UsernameTextFieldItem : TextFieldItem<String, SmtpCredential>(
     "Username", // TODO rename to email?
     String::class,
-    smtpCredentialLens.map { it::username }
+    smtpCredentialLens.map { it::username },
+    keyboardType = KeyboardType.Email,
 )
 
 class PasswordTextFieldItem : TextFieldItem<String, SmtpCredential>(
