@@ -41,8 +41,8 @@ data class GoogleEmailCredential(
     override val isEmpty: Boolean get() = false
 
     companion object {
-        private const val serverClientSecret = "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"
-        private const val serverClientId = "473994673878-hpbjfm51euanc0molpthbesm82u3eatl.apps.googleusercontent.com"
+        private const val serverClientSecret = "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"
+        private const val serverClientId = "473994673878-nkl5shgc2dumgflmfthtq17k0buag7kq.apps.googleusercontent.com"
 
         private var continuation: Continuation<GoogleSignInAccount?>? = null // TODO It looks hacky. actor pattern? channel?
         fun registerActivityForResult(activity: ComponentActivity): ActivityResultLauncher<Intent> {
@@ -78,7 +78,7 @@ data class GoogleEmailCredential(
                     }.also { continuation = null } ?: return@withContext null
 
                     val accessToken = withContext(Dispatchers.IO) {
-                        "https://accounts.google.com/o/oauth2/token"
+                        "https://oauth2.googleapis.com/token"
                             .httpPost(
                                 parameters = listOf(
                                     "client_id" to serverClientId,
@@ -90,7 +90,6 @@ data class GoogleEmailCredential(
                             .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
                             .value
                     }
-
 
                     GoogleEmailCredential(
                         account.id!!,
@@ -108,21 +107,25 @@ data class GoogleEmailCredential(
             }
     }
 
-    fun tryRefreshOauthToken() = try {
-        val response = "https://accounts.google.com/o/oauth2/token"
-            .httpPost(
-                parameters = listOf(
-                    "client_id" to serverClientId,
-                    "client_secret" to serverClientSecret,
-                    "grant_type" to "refresh_token",
-                    "refresh_token" to googleRefreshToken
+    // https://developers.google.com/oauthplayground/
+    suspend fun tryRefreshOauthToken() = withContext(Dispatchers.IO) {
+        try {
+            val response = "https://oauth2.googleapis.com/token"
+                .httpPost(
+                    parameters = listOf(
+                        "client_secret" to serverClientSecret,
+                        "grant_type" to "refresh_token",
+                        "refresh_token" to googleRefreshToken,
+                        "client_id" to serverClientId,
+                    )
                 )
-            )
-            .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
-            .value
-        copy(googleAccessToken = response.access_token)
-    } catch (ex: Throwable) {
-        null
+                .responseObject(jacksonDeserializerOf<GoogleOauth2TokenResponse>())
+                .value
+            copy(googleAccessToken = response.access_token)
+        } catch (ex: Throwable) {
+            // TODO logging
+            null
+        }
     }
 
     class Pref(index: Int) : SharedPref<GoogleEmailCredential>(null) {
