@@ -1,11 +1,14 @@
 package bobko.todomail.settings.emailtemplate
 
+import android.accounts.AccountManager
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,6 +29,9 @@ import androidx.compose.ui.window.PopupProperties
 import bobko.todomail.R
 import bobko.todomail.model.*
 import bobko.todomail.util.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.mapNotNull
 import kotlin.reflect.KClass
 
 sealed class TextFieldItem<T : Any, TEmailCredential : EmailCredential>(
@@ -94,27 +100,47 @@ class SendToTextFieldItem<TEmailCredential : EmailCredential> : TextFieldItem<St
                     interactionSource = interactionSource
                 )
             }
-            val parsedEmail = emailTemplate.value.uniqueCredential.credential.email?.split("@") ?: listOf()
+            val deviceEmails = remember(emailTemplate.value.label) {
+                AccountManager.get(viewModel.getApplication()).accounts.flatMap {
+                    it.name.labelizeEmail(emailTemplate.value.label)
+                }
+            }
+            val emails = deviceEmails
+                .plus(emailTemplate.value.uniqueCredential.credential.email.labelizeEmail(emailTemplate.value.label))
+                .filter { it.contains(emailTemplate.value.sendTo) && it != emailTemplate.value.sendTo }
+                .distinct()
+            var dismissed by remember(emailTemplate.value) { mutableStateOf(false) }
+            LaunchedEffect(interactionSource) {
+                interactionSource.interactions
+                    .filter { it is PressInteraction.Press }
+                    .collect { dismissed = false }
+            }
             DropdownMenu(
-                expanded = interactionSource.collectIsFocusedAsState().value &&
-                        emailTemplate.value.sendTo.isEmpty() &&
-                        parsedEmail.isNotEmpty(),
-                onDismissRequest = { /*TODO*/ },
+                expanded = interactionSource.collectIsFocusedAsState().value && emails.isNotEmpty() && !dismissed,
+                onDismissRequest = { dismissed = true },
                 properties = PopupProperties(focusable = false) // Don't hide keyboard
             ) {
-                parsedEmail.takeIf { it.size == 2 }?.let { (local, domain) ->
-                    val suggestedEmail = "$local+${emailTemplate.value.label.lowercase()}@$domain"
+                emails.forEach { email ->
                     DropdownMenuItem(
-                        onClick = {
-                            emailTemplate.value = emailTemplate.value.copy(sendTo = suggestedEmail)
-                        }
+                        onClick = { emailTemplate.value = emailTemplate.value.copy(sendTo = email) }
                     ) {
-                        Text(suggestedEmail)
+                        Text(email)
                     }
                 }
             }
         }
     }
+
+    private fun String.labelizeEmail(label: String) = split("@")
+        .takeIf { it.size == 2 }
+        ?.let { (local, domain) ->
+            if (label.isBlank()) {
+                listOf("$local@$domain")
+            } else {
+                listOf("$local@$domain", "$local+${label.lowercase()}@$domain")
+            }
+        }
+        ?: listOf()
 }
 
 private val smtpCredentialLens
