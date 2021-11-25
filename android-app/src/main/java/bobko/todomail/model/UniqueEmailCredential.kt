@@ -11,6 +11,7 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
     val credential: T
 ) {
     companion object {
+        // TODO add overflow logging
         val uniqueCredentialId by intSharedPref(0)
 
         fun <T : EmailCredential> new(emailCredential: T, context: Context) =
