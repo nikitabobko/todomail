@@ -40,6 +40,8 @@ sealed class TextFieldItem<T : Any, TEmailCredential : EmailCredential>(
     val lens: Lens<EmailTemplate<TEmailCredential>, T>,
     val keyboardType: KeyboardType = KeyboardType.Text
 ) {
+    val focusRequester = FocusRequester()
+
     fun getCurrentText(emailTemplate: EmailTemplate<TEmailCredential>): String {
         return lens.get(emailTemplate).takeIf { it != -1 }?.toString() ?: ""
     }
@@ -262,7 +264,6 @@ private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
-    val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     val index = fields.indexOf(item).also { check(it != -1) }
 
@@ -276,7 +277,7 @@ private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
         isError = error != null,
         modifier = Modifier
             .weight(1f)
-            .focusRequester(focusRequester),
+            .focusRequester(item.focusRequester),
         interactionSource = interactionSource,
         keyboardOptions = KeyboardOptions(
             keyboardType = item.keyboardType,
@@ -285,12 +286,8 @@ private fun <T : Any, TEmailCredential : EmailCredential> RowScope.MyTextField(
         // TODO IDE hadn't completed this parameter :( Need to fix in Kotlin plugin
         visualTransformation = visualTransformation,
         keyboardActions = KeyboardActions(
-            onNext = {
-                // TODO implement
-            },
-            onDone = {
-                keyboard?.hide()
-            }
+            onNext = { fields.getOrNull(index + 1)?.focusRequester?.requestFocus() },
+            onDone = { keyboard?.hide() }
         ),
         onValueChange = { newValueRaw ->
             val newValue = when (item.clazz) {
