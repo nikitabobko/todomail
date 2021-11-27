@@ -335,7 +335,7 @@ private fun replaceCredential(
 ): EmailTemplate<EmailCredential> {
     val invalidUniqCred = invalidTemplate.uniqueCredential
     val newTemplate = invalidTemplate.switchCredential(
-        UniqueEmailCredential.new(newCred, context),
+        UniqueEmailCredential.new(newCred, context, forceNew = true),
         context
     )
     context.writePref {

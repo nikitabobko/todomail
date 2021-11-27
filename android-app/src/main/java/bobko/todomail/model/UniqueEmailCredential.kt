@@ -14,15 +14,19 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
         // TODO add overflow logging
         val uniqueCredentialId by intSharedPref(0)
 
-        fun <T : EmailCredential> new(emailCredential: T, context: Context) =
-            context.readPref { All.read() }.firstOrNull { emailCredential == it.credential }
-                ?.cast<UniqueEmailCredential<T>>()
-                ?: UniqueEmailCredential(
-                    context.writePref {
-                        uniqueCredentialId.read().also { uniqueCredentialId.write(it + 1) }
-                    },
-                    emailCredential
-                )
+        fun <T : EmailCredential> new(emailCredential: T, context: Context, forceNew: Boolean = false): UniqueEmailCredential<T> {
+            val existing: UniqueEmailCredential<T>? =
+                if (!forceNew) {
+                    context.readPref { All.read() }.firstOrNull { emailCredential == it.credential }
+                        ?.cast<UniqueEmailCredential<T>>()
+                } else null
+            return existing ?: UniqueEmailCredential(
+                context.writePref {
+                    uniqueCredentialId.read().also { uniqueCredentialId.write(it + 1) }
+                },
+                emailCredential
+            )
+        }
     }
 
     object All : ListSharedPref<UniqueEmailCredential<*>>(
