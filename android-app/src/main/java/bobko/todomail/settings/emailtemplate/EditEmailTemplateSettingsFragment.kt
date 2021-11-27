@@ -198,8 +198,22 @@ private fun <TEmailCredential : EmailCredential> EditEmailTemplateSettingsFragme
                 ) {
                     viewModel.showErrorIfFieldIsEmpty.value = true
                 } else {
-                    requireContext().writePref {
-                        EmailTemplate.All.write(EmailTemplate.All.read() + emailTemplate.value)
+                    when (mode) {
+                        Mode.Edit -> {
+                            requireContext().writePref {
+                                EmailTemplate.All.write(EmailTemplate.All.read().map {
+                                    when (it.id) {
+                                        emailTemplate.value.id -> emailTemplate.value
+                                        else -> it
+                                    }
+                                })
+                            }
+                        }
+                        Mode.Add -> {
+                            requireContext().writePref {
+                                EmailTemplate.All.write(EmailTemplate.All.read() + emailTemplate.value)
+                            }
+                        }
                     }
                     findNavController().navigateUp()
                 }
