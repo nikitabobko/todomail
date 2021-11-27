@@ -13,7 +13,7 @@ private class StringBasedSharedPref<T : Any>(
     val deserialize: (String) -> T,
 ) : SharedPref<T>(propertyReceiver) {
     override fun PrefWriterDslReceiver.writeImpl(value: T?) {
-        editor.putString(key, value?.let(serialize))
+        putString(key, value?.let(serialize))
     }
 
     override fun PrefReaderDslReceiver.read() =

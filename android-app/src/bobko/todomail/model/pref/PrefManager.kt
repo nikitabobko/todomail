@@ -3,8 +3,8 @@ package bobko.todomail.model.pref
 import bobko.todomail.credential.UniqueEmailCredential
 import bobko.todomail.model.EmailTemplate
 import bobko.todomail.pref.booleanSharedPref
-import bobko.todomail.util.doesSupportTiles
 import bobko.todomail.pref.stringSharedPref
+import bobko.todomail.util.doesSupportTiles
 
 object PrefManager {
     val prefillWithClipboardWhenStartedFromLauncher by booleanSharedPref(defaultValue = false)
@@ -16,8 +16,6 @@ object PrefManager {
         prefillWithClipboardWhenStartedFromLauncher,
         prefillWithClipboardWhenStartedFromTile,
         todoDraft,
-        UniqueEmailCredential.uniqueCredentialId,
-        EmailTemplate.uniqueEmailTemplateId,
         EmailTemplate.All,
         UniqueEmailCredential.All
     )

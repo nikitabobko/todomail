@@ -62,6 +62,14 @@ fun sign(x: Int): Int {
     }
 }
 
+val isTestMode =
+    try {
+        Class.forName("org.junit.Test")
+        true
+    } catch (ex: ClassNotFoundException) {
+        false
+    }
+
 val doesSupportTiles: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
 
 fun <T : Any, V> T.copy(property: KProperty<V>, value: V): T {

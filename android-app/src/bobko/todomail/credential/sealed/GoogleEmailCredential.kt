@@ -9,10 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import bobko.todomail.credential.createEmail
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.stringSharedPref
-import bobko.todomail.util.PrefReaderDslReceiver
-import bobko.todomail.util.PrefWriterDslReceiver
-import bobko.todomail.util.errorException
-import bobko.todomail.util.safeCast
+import bobko.todomail.util.*
 import com.github.kittinunf.fuel.core.ResponseResultOf
 import com.github.kittinunf.fuel.core.isSuccessful
 import com.github.kittinunf.fuel.httpPost
@@ -31,7 +28,7 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-data class GoogleEmailCredential(
+data class GoogleEmailCredential private constructor(
     private val accountId: String,
     private val googleAccessToken: String,
     private val googleRefreshToken: String,
@@ -68,6 +65,16 @@ data class GoogleEmailCredential(
                 .requestId()
                 .requestEmail()
                 .build()
+
+        fun newTestInstance(): GoogleEmailCredential {
+            check(isTestMode)
+            return GoogleEmailCredential(
+                "Test Account Id",
+                "Test Google Access Token",
+                "Test Google Refresh Token",
+                "someEmail@example.com"
+            )
+        }
 
         suspend fun signIn(context: Context, launcher: ActivityResultLauncher<Intent>): GoogleEmailCredential? =
             withContext(Dispatchers.Main) {

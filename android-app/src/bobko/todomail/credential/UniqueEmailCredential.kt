@@ -13,7 +13,7 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
 ) {
     companion object {
         // TODO add overflow logging
-        val uniqueCredentialId by intSharedPref(0)
+        private val uniqueCredentialId by intSharedPref(0)
 
         fun <T : EmailCredential> new(emailCredential: T, context: Context, forceNew: Boolean = false): UniqueEmailCredential<T> {
             val existing: UniqueEmailCredential<T>? =
@@ -50,14 +50,14 @@ data class UniqueEmailCredential<out T : EmailCredential> private constructor(
     fun isDisposed(context: Context) = context.readPref { All.read() }.none { it.id == this.id }
 
     private class Pref(val index: Int) : SharedPref<UniqueEmailCredential<*>>(null) {
-        private val credentialId by intSharedPref(0, index.toString())
+        private val uniqueCredentialId by intSharedPref(0, index.toString())
 
         override fun PrefWriterDslReceiver.writeImpl(value: UniqueEmailCredential<*>?) {
-            credentialId.write(value?.id)
+            uniqueCredentialId.write(value?.id)
             EmailCredential.Pref(index).write(value?.credential)
         }
 
         override fun PrefReaderDslReceiver.read() =
-            UniqueEmailCredential(credentialId.read(), EmailCredential.Pref(index).read())
+            UniqueEmailCredential(uniqueCredentialId.read(), EmailCredential.Pref(index).read())
     }
 }
