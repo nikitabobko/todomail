@@ -22,12 +22,8 @@ import org.junit.runner.RunWith
 class SharedPreferencesTest {
     @Test
     fun testPrefKeysAreStable() = onUiThread {
+        clearSharedPrefs()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val sharedPref = PreferenceManager.getDefaultSharedPreferences(context)
-        sharedPref.edit().also { editor ->
-            sharedPref.all.keys.forEach { key -> editor.remove(key) }
-            editor.commit()
-        }
         PrefWriterDslReceiverForTest.checkDuplicates = true
         val all = listOf(
             BooleanSharedPrefTester(PrefManager.prefillWithClipboardWhenStartedFromLauncher),

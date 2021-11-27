@@ -18,6 +18,7 @@ import org.junit.runner.RunWith
 class MainActivityViewModelTest {
     @Test
     fun sharedTextShouldBePrioritizedOverDraftUnitTest() {
+        preventMainActivityEarlyExit()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.writePref {
             PrefManager.todoDraft.write("draft text")
@@ -32,6 +33,7 @@ class MainActivityViewModelTest {
 
     @Test
     fun sharedTextShouldBePrioritizedOverDraftIntegrationTest() {
+        preventMainActivityEarlyExit()
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         context.writePref {
             PrefManager.todoDraft.write("draft value")
