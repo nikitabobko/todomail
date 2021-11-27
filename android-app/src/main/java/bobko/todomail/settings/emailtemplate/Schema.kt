@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,11 +26,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import bobko.todomail.R
+import bobko.todomail.credential.SmtpCredentialType
+import bobko.todomail.credential.emailIconSize
+import bobko.todomail.credential.sealed.EmailCredential
+import bobko.todomail.credential.sealed.SmtpCredential
 import bobko.todomail.model.*
 import bobko.todomail.util.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.mapNotNull
 import kotlin.reflect.KClass
 
 sealed class TextFieldItem<T : Any, TEmailCredential : EmailCredential>(

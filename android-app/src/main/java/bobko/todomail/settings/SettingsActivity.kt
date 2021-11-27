@@ -8,9 +8,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.AndroidViewModel
 import bobko.todomail.R
+import bobko.todomail.credential.sealed.GoogleEmailCredential
 import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.EmailTemplate
-import bobko.todomail.model.GoogleEmailCredential
 import bobko.todomail.util.PrefWriterDslReceiver
 import bobko.todomail.util.mutableLiveDataOf
 import bobko.todomail.util.writePref

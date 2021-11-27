@@ -32,6 +32,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.core.content.getSystemService
+import bobko.todomail.credential.UniqueEmailCredential
+import bobko.todomail.credential.sealed.EmailCredential
+import bobko.todomail.credential.sealed.GoogleEmailCredential
+import bobko.todomail.credential.sealed.SmtpCredential
 import bobko.todomail.model.*
 import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.settings.SettingsActivity

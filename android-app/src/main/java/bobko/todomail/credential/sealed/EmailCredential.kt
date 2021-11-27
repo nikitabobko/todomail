@@ -1,6 +1,9 @@
-package bobko.todomail.model
+package bobko.todomail.credential.sealed
 
 import android.content.Context
+import bobko.todomail.credential.EmailCredentialType
+import bobko.todomail.credential.GoogleCredentialType
+import bobko.todomail.credential.SmtpCredentialType
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.stringSharedPref
 import bobko.todomail.util.PrefReaderDslReceiver

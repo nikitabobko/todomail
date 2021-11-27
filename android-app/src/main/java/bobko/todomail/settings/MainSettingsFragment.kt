@@ -9,7 +9,6 @@ import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.*
@@ -20,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
+import bobko.todomail.credential.SmtpCredentialType
+import bobko.todomail.credential.emailIconSize
 import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.*
 import bobko.todomail.model.pref.LastUsedAppFeatureManager

@@ -16,8 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.coroutineScope
 import androidx.navigation.fragment.findNavController
-import bobko.todomail.credential.PreferredEmailCredentialComparator
-import bobko.todomail.model.*
+import bobko.todomail.credential.*
+import bobko.todomail.credential.sealed.EmailCredential
+import bobko.todomail.credential.sealed.GoogleEmailCredential
+import bobko.todomail.credential.sealed.type
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.*
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment

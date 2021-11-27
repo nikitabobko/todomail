@@ -3,6 +3,8 @@ package bobko.todomail.model
 import com.github.kittinunf.fuel.jackson.defaultMapper
 import com.github.kittinunf.fuel.jackson.jacksonDeserializerOf
 import org.junit.Assert
+import bobko.todomail.credential.sealed.GoogleOauth2TokenResponse
+import bobko.todomail.credential.sealed.GmailMessageSendRequest
 import org.junit.Test
 
 class GoogleAuthJsonSerialization {

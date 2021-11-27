@@ -1,7 +1,10 @@
 package bobko.todomail.credential
 
 import android.content.Context
-import bobko.todomail.model.*
+import bobko.todomail.credential.sealed.EmailCredential
+import bobko.todomail.credential.sealed.GoogleEmailCredential
+import bobko.todomail.credential.sealed.SmtpCredential
+import bobko.todomail.model.EmailTemplate
 import bobko.todomail.util.readPref
 
 class PreferredEmailCredentialComparator(val context: Context) : Comparator<EmailCredential> {

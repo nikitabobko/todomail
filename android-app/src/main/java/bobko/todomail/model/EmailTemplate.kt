@@ -1,6 +1,8 @@
 package bobko.todomail.model
 
 import android.content.Context
+import bobko.todomail.credential.UniqueEmailCredential
+import bobko.todomail.credential.sealed.EmailCredential
 import bobko.todomail.pref.ListSharedPref
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.intSharedPref

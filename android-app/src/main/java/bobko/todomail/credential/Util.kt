@@ -1,4 +1,4 @@
-package bobko.todomail.login
+package bobko.todomail.credential
 
 import java.util.*
 import javax.mail.Message
@@ -16,4 +16,3 @@ fun createEmail(
     this.subject = subject
     setText(body)
 }
-

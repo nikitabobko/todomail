@@ -12,7 +12,10 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Done
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -21,8 +24,12 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.AndroidViewModel
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.R
-import bobko.todomail.credential.suggestUniqueCredential
-import bobko.todomail.model.*
+import bobko.todomail.credential.*
+import bobko.todomail.credential.sealed.EmailCredential
+import bobko.todomail.credential.sealed.GoogleEmailCredential
+import bobko.todomail.credential.sealed.SmtpCredential
+import bobko.todomail.credential.sealed.type
+import bobko.todomail.model.EmailTemplate
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.settings.SettingsScreen
 import bobko.todomail.util.*

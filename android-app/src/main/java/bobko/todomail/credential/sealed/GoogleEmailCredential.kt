@@ -1,4 +1,4 @@
-package bobko.todomail.model
+package bobko.todomail.credential.sealed
 
 import android.content.Context
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import bobko.todomail.login.createEmail
+import bobko.todomail.credential.createEmail
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.pref.stringSharedPref
 import bobko.todomail.util.PrefReaderDslReceiver

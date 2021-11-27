@@ -1,4 +1,4 @@
-package bobko.todomail.model
+package bobko.todomail.credential
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.size
@@ -10,6 +10,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import bobko.todomail.R
+import bobko.todomail.credential.sealed.EmailCredential
+import bobko.todomail.credential.sealed.GoogleEmailCredential
+import bobko.todomail.credential.sealed.SmtpCredential
 
 sealed interface EmailCredentialType<TEmailCredential : EmailCredential> {
     @Composable
