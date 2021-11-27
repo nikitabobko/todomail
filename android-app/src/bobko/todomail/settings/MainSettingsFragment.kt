@@ -69,14 +69,6 @@ fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveDat
 
         Divider()
         OtherSettingsSection()
-
-        OutlinedButton(
-            onClick = { /*TODO*/ }, modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text("Reset settings to default")
-        }
     }
 }
 
