@@ -1,4 +1,4 @@
-# Todomail
+# Todomail [![Build & Tests](https://github.com/nikitabobko/todomail/actions/workflows/main.yaml/badge.svg)](https://github.com/nikitabobko/todomail/actions/workflows/main.yaml)
 
 ![icon](.res/icon.png)
 

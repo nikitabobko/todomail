@@ -1,0 +1,40 @@
+name: Build & Tests
+
+on:
+  push:
+    branches:
+      - master
+      - bobko/rr
+  pull_request:
+  schedule:
+    - cron: '0 0 * * *' # every day at 00:00
+
+jobs:
+  build:
+    runs-on: macos-latest # macos because reactivecircus/android-emulator-runner@v2 doesn't support other OS
+    strategy:
+      matrix:
+        api-level: [ 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+      - name: Build with Gradle
+        run: ./gradlew -i build
+      - name: Run Android Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          script: ./gradlew -i connectedAndroidTest
