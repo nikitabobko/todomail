@@ -37,7 +37,6 @@ import bobko.todomail.credential.sealed.EmailCredential
 import bobko.todomail.credential.sealed.GoogleEmailCredential
 import bobko.todomail.credential.sealed.SmtpCredential
 import bobko.todomail.model.*
-import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.settings.SettingsActivity
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.*
@@ -66,9 +65,7 @@ class MainActivity : ComponentActivity() {
                     ?.getStringExtra(Intent.EXTRA_TEXT)
                 if (sharedText?.isNotBlank() == true) {
                     viewModel.startedFrom = StartedFrom.Sharesheet
-                    val callerAppLabel = referrer?.host?.let { getAppLabelByPackageName(it) }
-                        ?: LastUsedAppFeatureManager.getLastUsedAppLabel(this)
-                    viewModel.prefillSharedText(sharedText, callerAppLabel)
+                    viewModel.prefillSharedText(sharedText)
                 }
             }
 
@@ -84,11 +81,6 @@ class MainActivity : ComponentActivity() {
         }
         window.setGravity(Gravity.BOTTOM)
         window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        LastUsedAppFeatureManager.shouldAskForPermissions(this)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -111,10 +103,7 @@ class MainActivity : ComponentActivity() {
         if (clipboard?.isNotBlank() != true) {
             return
         }
-        viewModel.prefillSharedText(
-            clipboard,
-            LastUsedAppFeatureManager.getLastUsedAppLabel(this)
-        )
+        viewModel.prefillSharedText(clipboard)
     }
 
     companion object {

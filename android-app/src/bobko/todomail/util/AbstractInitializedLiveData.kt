@@ -25,30 +25,9 @@ class MutableInitializedLiveData<T : Any>(liveData: MutableLiveData<T>) :
         }
 }
 
-fun <T : Any> liveDataOf(value: T): InitializedLiveData<T> =
-    InitializedLiveData(MutableLiveData(value))
-
 fun <T : Any> mutableLiveDataOf(value: T): MutableInitializedLiveData<T> =
     MutableInitializedLiveData(MutableLiveData(value))
 
 @Composable
 fun <T : Any> AbstractInitializedLiveData<T, LiveData<T>>.observeAsState(): State<T> =
     liveData.observeAsState(value)
-
-fun <T : Any, O : Any, R : Any> mergeLatestValues(
-    firstSource: AbstractInitializedLiveData<T, LiveData<T>>,
-    secondSource: AbstractInitializedLiveData<O, LiveData<O>>,
-    merge: (T, O) -> R
-): AbstractInitializedLiveData<R, LiveData<R>> {
-    return AbstractInitializedLiveData(
-        MediatorLiveData<R>().apply {
-            addSource(firstSource.liveData) {
-                value = merge(it, secondSource.value)
-            }
-            addSource(secondSource.liveData) {
-                value = merge(firstSource.value, it)
-            }
-            value = merge(firstSource.value, secondSource.value)
-        }
-    )
-}

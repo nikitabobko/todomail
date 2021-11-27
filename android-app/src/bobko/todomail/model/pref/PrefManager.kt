@@ -18,8 +18,6 @@ object PrefManager {
         todoDraft,
         UniqueEmailCredential.uniqueCredentialId,
         EmailTemplate.uniqueEmailTemplateId,
-        LastUsedAppFeatureManager.appendAppNameThatSharedTheText,
-        LastUsedAppFeatureManager.isUsageAccessPromptShowedAtLeastOnce,
         EmailTemplate.All,
         UniqueEmailCredential.All
     )

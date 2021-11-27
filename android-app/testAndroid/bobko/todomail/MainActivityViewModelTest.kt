@@ -25,7 +25,7 @@ class MainActivityViewModelTest {
         onUiThread {
             val viewModel = MainActivityViewModel(context.applicationContext as Application)
             val expected = "expected text"
-            viewModel.prefillSharedText(expected, callerAppLabel = null)
+            viewModel.prefillSharedText(expected)
             Assert.assertEquals(expected, viewModel.todoTextDraft.value.text.trim())
         }
     }

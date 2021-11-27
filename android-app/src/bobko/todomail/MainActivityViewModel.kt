@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.AndroidViewModel
 import bobko.todomail.model.StartedFrom
-import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.model.pref.PrefManager
 import bobko.todomail.util.mutableLiveDataOf
 import bobko.todomail.util.readPref
@@ -39,26 +38,18 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
 
     private var isPrefilledWithSharedText: Boolean = false
 
-    fun prefillSharedText(sharedText: String, callerAppLabel: String?) {
+    fun prefillSharedText(sharedText: String) {
         require(sharedText.isNotBlank())
         if (!isPrefilledWithSharedText /* Allow to prefill TextField only once */) {
             isPrefilledWithSharedText = true
-            todoTextDraft.value = composeSharedText(sharedText, callerAppLabel)
+            todoTextDraft.value = composeSharedText(sharedText)
         }
     }
 
-    private fun composeSharedText(
-        sharedText: String,
-        callerAppLabel: String?
-    ): TextFieldValue {
+    private fun composeSharedText(sharedText: String): TextFieldValue {
         val text = buildString {
             appendLine()
             appendLine()
-            if (callerAppLabel != null &&
-                LastUsedAppFeatureManager.isFeatureEnabled(getApplication<Application>()).value
-            ) {
-                appendLine("Shared from: $callerAppLabel")
-            }
             append(sharedText)
         }
         return TextFieldValue(text)

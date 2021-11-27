@@ -24,7 +24,6 @@ import bobko.todomail.credential.SmtpCredentialType
 import bobko.todomail.credential.emailIconSize
 import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.*
-import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.util.*
 import kotlin.math.abs
 
@@ -66,25 +65,7 @@ fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveDat
             StartedFrom.Launcher.let { it to it.prefillPrefKey!! },
             StartedFrom.Tile.let { it to it.prefillPrefKey!! }
         ))
-
-        Divider()
-        OtherSettingsSection()
     }
-}
-
-@Composable
-private fun MainSettingsFragment.OtherSettingsSection() {
-    val append by LastUsedAppFeatureManager.isFeatureEnabled(requireContext())
-        .observeAsState()
-    SwitchOrCheckBoxItem(
-        "Append app name that shared the text or clipboard",
-        checked = append,
-        onChecked = {
-            this.requireContext().writePref {
-//                PrefManager.appendAppNameThatSharedTheText.value = !append TODO
-            }
-        }
-    )
 }
 
 fun calculateNewIndex(currentIdx: Int, pixelOffset: Int, heights: List<Int>): Int {

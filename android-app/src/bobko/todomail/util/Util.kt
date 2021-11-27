@@ -23,16 +23,6 @@ data class TargetWithContext<T, C>(val target: T, val context: C) {
     override fun hashCode() = target.hashCode()
 }
 
-fun Context.getAppLabelByPackageName(packageName: String): String? {
-    return try {
-        packageManager.getApplicationLabel(packageManager.getApplicationInfo(packageName, 0))
-            .toString()
-    } catch (ex: NameNotFoundException) {
-        // TODO logging
-        null
-    }
-}
-
 inline fun <T> T?.orElse(block: () -> T): T = this ?: block()
 
 fun Context.showToast(text: String, duration: Int = Toast.LENGTH_SHORT) {
