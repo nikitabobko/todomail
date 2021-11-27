@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import bobko.todomail.credential.suggestEmailTemplate
 import bobko.todomail.model.*
 import bobko.todomail.model.pref.LastUsedAppFeatureManager
 import bobko.todomail.util.*
+import kotlin.math.abs
 
 class MainSettingsFragment : Fragment() {
     fun parentActivity() = requireActivity() as SettingsActivity
@@ -52,7 +54,6 @@ class MainSettingsFragment : Fragment() {
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MainSettingsFragment.MainSettingsActivityScreen(accounts: InitializedLiveData<List<EmailTemplateRaw>>) {
     SettingsScreen("Todomail Settings", rootSettingsScreen = true) {
@@ -94,11 +95,23 @@ private fun MainSettingsFragment.OtherSettingsSection() {
     )
 }
 
-/**
- * Test - [bobko.todomail.settings.CalculateIndexOffsetTest]
- */
-fun calculateIndexOffset(pixelOffset: Int, itemHeight: Int) =
-    (pixelOffset / (itemHeight / 2)).let { it / 2 + it % 2 }
+fun calculateNewIndex(currentIdx: Int, pixelOffset: Int, heights: List<Int>): Int {
+    if (pixelOffset == 0) {
+        return currentIdx
+    }
+    var newIndex = currentIdx
+    var accumulatedHeights = 0
+    val direction = sign(pixelOffset)
+    while (newIndex + direction in heights.indices) {
+        if (abs(pixelOffset) > heights[newIndex + direction] / 2 + accumulatedHeights) {
+            accumulatedHeights += heights[newIndex + direction]
+            newIndex += direction
+        } else {
+            break
+        }
+    }
+    return newIndex
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -107,11 +120,8 @@ private fun MainSettingsFragment.TemplatesSection(
 ) {
     val templates by emailTemplatesLive.observeAsState()
     var offsets by remember(templates.size) { mutableStateOf(List(templates.size) { 0 }) }
-    val itemHeightDp = 80.dp // TODO rewrite!
-    val itemHeight = with(LocalDensity.current) { itemHeightDp.toPx().toInt() }
+    val heights = remember(templates.size) { MutableList(templates.size) { 0 } }
     templates.forEachIndexed { currentIdx, emailTemplate ->
-        val offsetLowerBound = -currentIdx * itemHeight
-        val offsetUpperBound = (templates.lastIndex - currentIdx) * itemHeight
         ListItem(
             icon = {
                 SmtpCredentialType.values() // TODO icon by domain, hmm. Is it okay logic?
@@ -122,7 +132,7 @@ private fun MainSettingsFragment.TemplatesSection(
             modifier = Modifier
                 .offset(y = with(LocalDensity.current) { offsets[currentIdx].toDp() })
                 .clickable { navigateToEditScreen(emailTemplate) }
-                .height(itemHeightDp),
+                .onSizeChanged { heights[currentIdx] = it.height },
             trailing = trailing@{
                 if (templates.size <= 1) {
                     return@trailing
@@ -130,18 +140,19 @@ private fun MainSettingsFragment.TemplatesSection(
                 Icon(
                     painterResource(R.drawable.drag_handle_24),
                     "",
-                    // TODO Change to swipeable? https://developer.android.com/jetpack/compose/gestures#swiping
                     modifier = Modifier.draggable(
                         rememberDraggableState(onDelta = { delta ->
-                            val newOffset = (offsets[currentIdx] + delta.toInt())
+                            val offsetLowerBound = -heights.asSequence().take(currentIdx).sum()
+                            val offsetUpperBound = heights.asSequence().drop(currentIdx + 1).sum()
+                            val pixelOffset = (offsets[currentIdx] + delta.toInt())
                                 .coerceIn(offsetLowerBound..offsetUpperBound)
-                            val newIdx = currentIdx + calculateIndexOffset(newOffset, itemHeight)
+                            val newIdx = calculateNewIndex(currentIdx, pixelOffset, heights)
                             offsets = List(offsets.size) {
                                 when (it) {
-                                    currentIdx -> newOffset
+                                    currentIdx -> pixelOffset
 
                                     in minOf(newIdx, currentIdx)..maxOf(newIdx, currentIdx) -> {
-                                        sign(currentIdx - it) * itemHeight
+                                        sign(currentIdx - it) * heights[currentIdx]
                                     }
 
                                     else -> 0
@@ -150,10 +161,7 @@ private fun MainSettingsFragment.TemplatesSection(
                         }),
                         orientation = Orientation.Vertical,
                         onDragStopped = {
-                            val newIdx = currentIdx + calculateIndexOffset(
-                                offsets[currentIdx],
-                                itemHeight
-                            )
+                            val newIdx = calculateNewIndex(currentIdx, offsets[currentIdx], heights)
 
                             val newAccounts = templates.toMutableList().apply {
                                 removeAt(currentIdx)
@@ -167,10 +175,15 @@ private fun MainSettingsFragment.TemplatesSection(
                 )
             },
             text = {
-                Text(text = "[${emailTemplate.label}] TO: ${emailTemplate.sendTo}")
+                Text(text = emailTemplate.label)
             },
             secondaryText = {
-                Text("FROM: ${emailTemplate.uniqueCredential.credential.label}")
+                Text(
+                    """
+                        FROM: ${emailTemplate.uniqueCredential.credential.label}
+                        TO: ${emailTemplate.sendTo}
+                    """.trimIndent()
+                )
             }
         )
     }
