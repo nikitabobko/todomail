@@ -72,7 +72,7 @@ android {
     }
     buildTypes {
         release {
-            signingConfig = releaseSigningConfig
+            releaseSigningConfig?.let { signingConfig = it }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -80,7 +80,7 @@ android {
             )
         }
         debug {
-            signingConfig = releaseSigningConfig
+            releaseSigningConfig?.let { signingConfig = it }
         }
     }
     compileOptions {
