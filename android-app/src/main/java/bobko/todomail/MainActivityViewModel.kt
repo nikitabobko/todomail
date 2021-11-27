@@ -39,17 +39,11 @@ class MainActivityViewModel(application: Application) : AndroidViewModel(applica
 
     private var isPrefilledWithSharedText: Boolean = false
 
-    fun prefillSharedText(
-        sharedText: String,
-        callerAppLabel: String?,
-        useRawText: Boolean = false
-    ) {
+    fun prefillSharedText(sharedText: String, callerAppLabel: String?) {
         require(sharedText.isNotBlank())
         if (!isPrefilledWithSharedText /* Allow to prefill TextField only once */) {
             isPrefilledWithSharedText = true
-            todoTextDraft.value =
-                if (useRawText) TextFieldValue(sharedText)
-                else composeSharedText(sharedText, callerAppLabel)
+            todoTextDraft.value = composeSharedText(sharedText, callerAppLabel)
         }
     }
 
