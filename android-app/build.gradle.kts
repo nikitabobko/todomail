@@ -29,6 +29,19 @@ fun File.readProperty(propertyName: String): String = bufferedReader().use { rea
 }
 
 android {
+    sourceSets {
+        getByName("main") {
+            java.srcDir("src")
+            res.srcDir("res")
+            manifest.srcFile("AndroidManifest.xml")
+        }
+        getByName("test") {
+            java.srcDir("test")
+        }
+        getByName("androidTest") {
+            java.srcDir("testAndroid")
+        }
+    }
     compileSdk = 31
 
     defaultConfig {
