@@ -52,7 +52,7 @@ enum class SmtpCredentialType(
     Yahoo(
         "Yahoo Mail (SMTP)",
         R.drawable.yahoo_mail,
-        SmtpCredential("smtp.mail.yahoo.com", 465, username = "", password = ""),
+        SmtpCredential("smtp.mail.yahoo.com", 587, username = "", password = ""),
         domain = "yahoo.com",
     ),
     Generic(
