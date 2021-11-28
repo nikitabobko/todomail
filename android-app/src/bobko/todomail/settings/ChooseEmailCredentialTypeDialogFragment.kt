@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.coroutineScope
@@ -20,6 +20,7 @@ import bobko.todomail.credential.*
 import bobko.todomail.credential.sealed.EmailCredential
 import bobko.todomail.credential.sealed.GoogleEmailCredential
 import bobko.todomail.credential.sealed.type
+import bobko.todomail.model.EmailTemplate
 import bobko.todomail.theme.EmailTodoTheme
 import bobko.todomail.util.*
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -128,13 +129,45 @@ private fun ChooseEmailCredentialTypeDialogFragment.MailItem(
     text: String,
     uniqueCredential: UniqueEmailCredential<*>
 ) {
+    var alertMessage by remember { mutableStateOf("") }
+    val signOut = {
+        requireContext().writePref {
+            EmailTemplate.All.write(EmailTemplate.All.read()
+                .filter { it.uniqueCredential.id != uniqueCredential.id })
+        }
+    }
+    if (alertMessage.isNotBlank()) {
+        AlertDialog(
+            onDismissRequest = { alertMessage = "" },
+            buttons = {
+                CenteredRow(modifier = Modifier.padding(8.dp)) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = { alertMessage = "" }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = { signOut() }) {
+                        Text("Ok")
+                    }
+                }
+            },
+            text = {
+                Text(alertMessage)
+            }
+        )
+    }
     ListItem(
         modifier = Modifier.clickable { navigateToEditTemplatePage(uniqueCredential) },
         trailing = {
             TextButton(
                 onClick = {
-                    lifecycle.coroutineScope.launch {
-                        TODO()
+                    val templatesToDelete = requireContext().readPref { EmailTemplate.All.read() }
+                        .filter { it.uniqueCredential.id == uniqueCredential.id }
+                    if (templatesToDelete.isNotEmpty()) {
+                        alertMessage = "Signing out of '${uniqueCredential.credential.label}' leads to " +
+                                "${templatesToDelete.size} template${if (templatesToDelete.size > 1) "s" else ""} removal: " +
+                                templatesToDelete.joinToString { "'${it.label}'" } + "\nContinue?"
+                    } else {
+                        signOut()
                     }
                 }
             ) {
