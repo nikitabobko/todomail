@@ -28,6 +28,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
@@ -159,8 +162,21 @@ private fun MainActivity.TextFieldAndButtons(accountsLive: InitializedLiveData<L
         val todoTextDraft = viewModel.todoTextDraft.observeAsMutableState()
         val focusRequester = remember { FocusRequester() }
         val isError = remember { mutableStateOf(false) }
+
         TextField(
-            value = todoTextDraft.value,
+            value = todoTextDraft.value.copy(annotatedString = AnnotatedString.Builder(todoTextDraft.value.text)
+                .apply {
+                    val text = todoTextDraft.value.text
+                    if (text.lineSequence().take(2).count() > 1) {
+                        val style = SpanStyle(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = MaterialTheme.typography.h6.fontSize
+                        )
+                        addStyle(style, 0, text.lineSequence().first().length)
+                    }
+                }
+                .toAnnotatedString()
+            ),
             isError = isError.value,
             onValueChange = {
                 todoTextDraft.value = it
