@@ -255,7 +255,12 @@ private fun MainActivity.Buttons(
                 ) {
                     accounts.drop(numOfButtonsToFoldDownTo)
                         .forEach {
-                            DropdownMenuItem(onClick = { onClick(it) }) {
+                            DropdownMenuItem(
+                                onClick = {
+                                    onClick(it)
+                                    expanded = false
+                                }
+                            ) {
                                 Text(it.label, color = greenOrErrorColor)
                             }
                         }
