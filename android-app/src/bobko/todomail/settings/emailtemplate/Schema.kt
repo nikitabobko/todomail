@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -26,10 +29,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import bobko.todomail.R
+import bobko.todomail.credential.GoogleCredentialType
 import bobko.todomail.credential.SmtpCredentialType
 import bobko.todomail.credential.emailIconSize
 import bobko.todomail.credential.sealed.EmailCredential
 import bobko.todomail.credential.sealed.SmtpCredential
+import bobko.todomail.credential.sealed.type
 import bobko.todomail.model.*
 import bobko.todomail.util.*
 import kotlinx.coroutines.flow.collect
@@ -225,6 +230,16 @@ class PasswordTextFieldItem : TextFieldItem<String, SmtpCredential>(
         Column(Modifier.padding(start = 16.dp, end = 16.dp)) {
             var textFieldVisualTransformation: VisualTransformation by remember {
                 mutableStateOf(PasswordVisualTransformation())
+            }
+            when (emailTemplate.value.uniqueCredential.credential.type) {
+                SmtpCredentialType.Gmail, SmtpCredentialType.Yahoo -> {
+                    CenteredRow {
+                        Icon(Icons.Rounded.Warning, contentDescription = "")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Make sure to use \"App password\" instead of regular password", style = MaterialTheme.typography.caption)
+                    }
+                }
+                SmtpCredentialType.Outlook, SmtpCredentialType.Generic -> {}
             }
             CenteredRow {
                 MyTextField(

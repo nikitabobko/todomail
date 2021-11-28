@@ -54,3 +54,5 @@ val <T : EmailCredential> T.type: EmailCredentialType<T>
         is GoogleEmailCredential -> GoogleCredentialType as EmailCredentialType<T>
         is SmtpCredential -> SmtpCredentialType.findBySmtpServer(cred) as EmailCredentialType<T>
     }
+
+val SmtpCredential.type: SmtpCredentialType get() = SmtpCredentialType.findBySmtpServer(this)
