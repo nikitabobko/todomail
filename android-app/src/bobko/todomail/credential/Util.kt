@@ -7,11 +7,13 @@ import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 fun createEmail(
-    to: String?,
-    subject: String?,
-    body: String?,
+    from: String,
+    to: String,
+    subject: String,
+    body: String,
     session: Session = Session.getDefaultInstance(Properties())
 ) = MimeMessage(session).apply {
+    setFrom(from)
     setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
     this.subject = subject
     setText(body)

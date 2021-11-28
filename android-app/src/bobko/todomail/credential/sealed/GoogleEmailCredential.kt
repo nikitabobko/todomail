@@ -168,7 +168,7 @@ data class GoogleEmailCredential private constructor(
         subject: String,
         body: String
     ) {
-        val raw = createEmail(to, subject, body).encodeToBase64()
+        val raw = createEmail(email, to, subject, body).encodeToBase64()
 
         "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
             .httpPost()

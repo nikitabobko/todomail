@@ -61,6 +61,6 @@ data class SmtpCredential(
                 return PasswordAuthentication(username, password)
             }
         }
-        Transport.send(createEmail(to, subject, body, Session.getInstance(prop, session)))
+        Transport.send(createEmail(username, to, subject, body, Session.getInstance(prop, session)))
     }
 }
