@@ -207,7 +207,7 @@ class SmtpServerPortTextFieldItem : TextFieldItem<Int, SmtpCredential>(
 }
 
 class UsernameTextFieldItem : TextFieldItem<String, SmtpCredential>(
-    "Username", // TODO rename to email?
+    "Username",
     String::class,
     smtpCredentialLens.map { it::username },
     keyboardType = KeyboardType.Email,
