@@ -1,19 +1,14 @@
 package bobko.todomail.util
 
 import android.content.Context
-import android.content.pm.PackageManager.NameNotFoundException
 import android.os.Build
 import android.view.View
 import android.widget.Toast
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.MutableLiveData
-import java.lang.IllegalStateException
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberFunctions
@@ -80,8 +75,8 @@ fun <T : Any, V> T.copyAndChangeProperty(property: KProperty<V>, value: V): T {
     return copyMethod.callBy(mapOf(instanceParam to this, parameterToAmend to value)) as T
 }
 
-inline fun <reified T : Any> Any.safeCast(): @kotlin.internal.NoInfer() T? = this as? T
+inline fun <reified T : Any> Any.safeCast(): @kotlin.internal.NoInfer T? = this as? T
 
-inline fun <reified T : Any> Any.cast(): @kotlin.internal.NoInfer() T = this as T
+inline fun <reified T : Any> Any.cast(): @kotlin.internal.NoInfer T = this as T
 
 fun errorException(throwable: Throwable): Nothing = throw IllegalStateException(throwable)

@@ -1,7 +1,8 @@
 package bobko.todomail.settings
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -13,13 +14,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import bobko.todomail.model.StartedFrom
 import bobko.todomail.pref.SharedPref
 import bobko.todomail.theme.EmailTodoTheme
-import bobko.todomail.util.*
+import bobko.todomail.util.doesSupportTiles
+import bobko.todomail.util.observeAsState
+import bobko.todomail.util.readPref
+import bobko.todomail.util.writePref
 
 @Composable
 fun Fragment.SettingsScreen(

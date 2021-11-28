@@ -1,7 +1,7 @@
 package bobko.todomail.util
 
 class PrefWriterDslReceiverForTest(private val impl: PrefWriterDslReceiverImpl) : PrefWriterDslReceiver by impl {
-    val existing = HashSet<String>()
+    private val existing = HashSet<String>()
 
     override fun putString(key: String, value: String?) {
         if (checkDuplicates && !existing.add(key)) {
