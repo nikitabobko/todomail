@@ -15,7 +15,7 @@ inline val <reified A : Any, B> KProperty1<A, B>.lens: Lens<A, B>
     get() {
         require(A::class.isData)
         val property = this
-        return Lens(property, { obj, newValue -> obj.copy(property, newValue) })
+        return Lens(property, { obj, newValue -> obj.copyAndChangeProperty(property, newValue) })
     }
 
 fun <A : Any, B : Any, C : Any> Lens<A, B>.map(other: Lens<B, C>): Lens<A, C> = Lens(
@@ -28,7 +28,7 @@ inline fun <A : Any, reified B : Any, C : Any> Lens<A, B>.map(crossinline other:
     return this@map.map(
         Lens(
             { obj -> other(obj).get() },
-            { obj, newValue -> obj.copy(other(obj), newValue) }
+            { obj, newValue -> obj.copyAndChangeProperty(other(obj), newValue) }
         )
     )
 }

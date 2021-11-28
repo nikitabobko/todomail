@@ -72,7 +72,7 @@ val isTestMode =
 
 val doesSupportTiles: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
 
-fun <T : Any, V> T.copy(property: KProperty<V>, value: V): T {
+fun <T : Any, V> T.copyAndChangeProperty(property: KProperty<V>, value: V): T {
     require(this::class.isData)
     val copyMethod = this::class.memberFunctions.single { it.name == "copy" }
     val instanceParam = copyMethod.instanceParameter!!

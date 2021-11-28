@@ -1,5 +1,6 @@
 package bobko.todomail.util
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.MainThread
@@ -44,8 +45,9 @@ class PrefWriterDslReceiverImpl(
 fun <T> Context.readPref(body: PrefReaderDslReceiver.() -> T) =
     PrefReaderDslReceiverImpl(PreferenceManager.getDefaultSharedPreferences(this)).body()
 
+@SuppressLint("ApplySharedPref")
 fun <T> Context.writePref(body: PrefWriterDslReceiver.() -> T): T {
     val pref = PreferenceManager.getDefaultSharedPreferences(this)
     val editor = pref.edit()
-    return injector.createPrefWriterDslReceiver(pref, editor).body().also { editor.apply() }
+    return injector.createPrefWriterDslReceiver(pref, editor).body().also { editor.commit() }
 }
