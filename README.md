@@ -3,7 +3,7 @@
 ![icon](.res/icon.png)
 
 Single dialog application which sends emails from preconfigured emails to other preconfigured emails.
-[SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol) is used to configure emails.
+[SMTP](https://en.wikipedia.org/wiki/Simple_Mail_Transfer_Protocol) or Google Account are used to configure emails.
 
 Features:
 * Lightweight dialog on top of other apps to quickly capture your todos
