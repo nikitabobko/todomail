@@ -29,4 +29,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Todomail"
 include(":android-app")
-include(":compile-only-util")

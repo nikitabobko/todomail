@@ -93,8 +93,10 @@ fun <T : Any, V> T.copyAndChangeProperty(property: KProperty<V>, value: V): T {
     return copyMethod.callBy(mapOf(instanceParam to this, parameterToAmend to value)) as T
 }
 
+@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 inline fun <reified T : Any> Any.safeCast(): @kotlin.internal.NoInfer T? = this as? T
 
+@Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 inline fun <reified T : Any> Any.cast(): @kotlin.internal.NoInfer T = this as T
 
 fun errorException(throwable: Throwable): Nothing = throw IllegalStateException(throwable)

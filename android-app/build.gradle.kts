@@ -125,7 +125,6 @@ android {
 }
 
 dependencies {
-    compileOnly(project(":compile-only-util"))
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.31")
 
     implementation("androidx.core:core-ktx:1.6.0")
